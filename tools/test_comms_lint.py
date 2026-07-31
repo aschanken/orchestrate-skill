@@ -192,6 +192,33 @@ class BackReferencePhraseOwnershipTests(unittest.TestCase):
                 comms.lint_text(text)["counts"]["hedge_opener"], 1, text)
 
 
+class MarketingAdjectiveScopeTests(unittest.TestCase):
+    """comms.md:83-84 lists what rule 10 deletes: "seamless, robust,
+    powerful, elegant, best-in-class". "unlock" is a verb with ordinary
+    technical senses, so it is not scored."""
+
+    def _count(self, text):
+        return comms.lint_text(text)["counts"]["marketing_adjective"]
+
+    def test_technical_unlock_is_not_marketing(self):
+        for text in ("Press the unlock button now.",
+                     "Call unlock on the mutex.",
+                     "The unlock code is wrong."):
+            self.assertEqual(self._count(text), 0, text)
+
+    def test_listed_marketing_adjectives_still_fire(self):
+        for text in ("This is a seamless integration.",
+                     "The parser is robust.",
+                     "We shipped a best-in-class result."):
+            self.assertEqual(self._count(text), 1, text)
+
+    def test_marketing_verbs_still_fire(self):
+        for text in ("This will unleash your team.",
+                     "This will empower your team.",
+                     "This will supercharge your team."):
+            self.assertEqual(self._count(text), 1, text)
+
+
 class VagueReferentExceptionTests(unittest.TestCase):
     """Rule-8 exception: a resolvable referent in the same sentence
     suppresses vague_referent. This is the most important behavior of the

@@ -67,7 +67,9 @@ MARKETING_ADJECTIVES = [
     "revolutionary", "blazing", "lightning-fast", "elegant", "delightful",
     "turnkey", "best-in-class", "state-of-the-art", "game-changing",
     "first-class", "battle-tested", "enterprise-grade", "supercharge",
-    "unlock", "unleash", "empower", "empowers",
+    # "unlock" is NOT here: it is an ordinary technical verb ("unlock
+    # button", "unlock the mutex"), so it produced false positives.
+    "unleash", "empower", "empowers",
 ]
 
 # "as mentioned" and "as noted above" are NOT here: comms.md:71 lists them
