@@ -58,7 +58,7 @@ PHRASAL_VERBS = [
     "spin up", "spin down", "reach out", "dive into", "dives into",
     "diving into", "kick off", "kicks off", "roll out", "rolls out",
     "tear down", "ramp up", "circle back", "drill down", "spun up",
-    "reaching out",
+    "reaching out", "carry out",
 ]
 
 MARKETING_ADJECTIVES = [
@@ -202,7 +202,7 @@ NOMINAL_SUFFIX = r"(?:tion|ment|ance|ence|sis)"
 ING_TAIL = (r"(?=$|[.,;:!?)]|\s+(?:of|on|for|to|in|at|with|from|by|into|"
             r"and|or|that|which|because|so|but)(?![a-z]))")
 NOMINALIZATION_RE = re.compile(
-    r"\b(?:perform|conduct|provide|carry out|make|do)\s+"
+    r"\b(?:perform|conduct|provide|make|do)\s+"
     r"(?:(?:a|an|the)\s+[a-z]{2,}(?:" + NOMINAL_SUFFIX + r"|ing)\b"
     r"|[a-z]{2,}" + NOMINAL_SUFFIX + r"\b"
     r"|[a-z]{2,}ing\b" + ING_TAIL + r")",

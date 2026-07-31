@@ -146,6 +146,24 @@ class NominalizationGerundTests(unittest.TestCase):
             self.assertEqual(self._count(text), 1, text)
 
 
+class CarryOutPhrasalVerbTests(unittest.TestCase):
+    """comms.md:67 governs phrasal verbs. "carry out" is a phrasal verb, not
+    a nominalization, and it must score in exactly one category."""
+
+    def test_carry_out_scores_phrasal_verb_only(self):
+        counts = comms.lint_text("We will carry out the testing.")["counts"]
+        self.assertEqual(counts["phrasal_verb"], 1)
+        self.assertEqual(counts["nominalization"], 0)
+
+    def test_carry_out_is_not_double_counted(self):
+        counts = comms.lint_text("Please carry out the deployment.")["counts"]
+        self.assertEqual(counts["phrasal_verb"] + counts["nominalization"], 1)
+
+    def test_other_light_verb_nominalizations_still_fire(self):
+        self.assertEqual(
+            comms.lint_text("We will perform an analysis.")["counts"]["nominalization"], 1)
+
+
 class VagueReferentExceptionTests(unittest.TestCase):
     """Rule-8 exception: a resolvable referent in the same sentence
     suppresses vague_referent. This is the most important behavior of the
