@@ -88,6 +88,33 @@ class CategoryFireTests(unittest.TestCase):
             self._count("One. Two. Three. Four. Five. Six. Seven.", "long_paragraph"), 0)
 
 
+class PassivePredicateAdjectiveTests(unittest.TestCase):
+    """comms.md:64 ("Name the actor") targets passive voice: be-verb + past
+    participle. A be-verb followed by a determiner and an -ed adjective is a
+    predicate adjective phrase, not passive voice."""
+
+    def _count(self, text):
+        return comms.lint_text(text)["counts"]["passive_voice"]
+
+    def test_predicate_adjective_is_not_passive(self):
+        for text in ("This is a complicated problem.",
+                     "That is an advanced setting.",
+                     "She is the interested party."):
+            self.assertEqual(self._count(text), 0, text)
+
+    def test_real_passive_still_fires(self):
+        self.assertEqual(self._count("The file was written by the parser."), 1)
+
+    def test_real_passive_without_by_agent_still_fires(self):
+        self.assertEqual(self._count("The file was utilized."), 1)
+
+    def test_adverb_between_be_verb_and_participle_still_fires(self):
+        for text in ("The file was quickly written by the parser.",
+                     "The file was not written by the parser.",
+                     "The file is being written by the parser."):
+            self.assertEqual(self._count(text), 1, text)
+
+
 class VagueReferentExceptionTests(unittest.TestCase):
     """Rule-8 exception: a resolvable referent in the same sentence
     suppresses vague_referent. This is the most important behavior of the

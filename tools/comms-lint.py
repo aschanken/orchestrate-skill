@@ -182,10 +182,15 @@ def split_sentences(text):
 BE_VERB = r"(?:is|are|was|were|be|been|being)"
 PP_IRREG = (r"(?:done|made|found|given|taken|seen|written|run|read|built|"
             r"held|kept|sent|set|put|left|lost|met|paid|told)")
-# Be-verb followed within 2 words by a past participle. Kept deliberately
+# Be-verb followed by an optional adverb and then a past participle. Only an
+# ADVERB may sit in the middle slot: a passive verb phrase has no room for a
+# determiner, so "is a complicated problem" is a predicate adjective phrase
+# (the -ed word modifies "problem"), not passive voice. Kept deliberately
 # narrow: a noisy linter gets ignored, precision beats recall.
+PASSIVE_ADV = (r"(?:[a-z]+ly|not|never|being|already|still|just|also|then|"
+               r"only|now|always|often|sometimes)")
 PASSIVE_RE = re.compile(
-    rf"\b{BE_VERB}\s+(?:\S+\s+)?(?:[a-z]{{2,}}ed|{PP_IRREG})\b", re.I
+    rf"\b{BE_VERB}\s+(?:{PASSIVE_ADV}\s+)?(?:[a-z]{{2,}}ed|{PP_IRREG})\b", re.I
 )
 
 NOMINALIZATION_RE = re.compile(
