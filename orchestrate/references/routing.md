@@ -217,16 +217,16 @@ it in the ledger.
 
 ## Cross-family verification pairings
 
-Same-family review shares training biases, but a verifier is still a
-judgment seat: an Anthropic-tier verifier is the DEFAULT for judgment
-claims. Reach for a cash-billed cross-family verifier — DELIBERATE SPEND —
-only when independence from the implementer's training lineage is the
-actual point, not routinely:
+Same-family review shares training biases, so a verifier from a DIFFERENT
+model family than the implementer is the PREFERRED default for judgment
+work — CASH-BILLED SPEND accepted where the implementer is Anthropic-tier.
+Fall back to an Anthropic-tier verifier only when cross-family capacity is
+unavailable, not as the routine choice:
 
 | Implementer | Preferred refuter |
 |---|---|
 | `glm` (frontend/UI) | `sonnet` by default; `kimi` with screenshots (deliberate spend) when independence from GLM's lineage on a UI-fidelity claim is the actual point |
 | `glm` (backend/feature) | `sonnet` by default; `ds-pro-max` (deliberate spend) when a different engineering lineage is the actual point |
 | `ds-pro-max` / `ds-flash` (backend) | `sonnet` by default |
-| `opus` (critical) | `sonnet` second-read + main-agent spot-check by default; `kimi` or `glm` (deliberate spend) when cross-family independence is the actual point |
+| `opus` (critical) | `kimi` or `glm` refuter by default (cash-billed, deliberate spend) — independence from Opus's Anthropic lineage is the point; `sonnet` second-read + main-agent spot-check as fallback only when cross-family capacity is unavailable |
 | `kimi` (analysis/synthesis) | `sonnet` fact-check against sources by default; `ds-pro` (deliberate spend) when independence from Sonnet's lineage is the actual point, main agent arbitrates |
