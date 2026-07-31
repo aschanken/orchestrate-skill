@@ -1,6 +1,6 @@
 ---
 name: orchestrate
-description: Run this session in "brains of the operation" mode — the main agent plans, routes, and verifies; model-routed subagents do all implementation lifting. Invoke with a task (/orchestrate fix issues 22 and 24) or bare to arm the mode for the whole session.
+description: Run this session in "brains of the operation" mode — the main agent plans, routes, and verifies; model-routed subagents and agent teams do all implementation lifting. Invoke with a task (/orchestrate fix issues 22 and 24) or bare to arm the mode for the whole session.
 ---
 
 # Orchestrate — the main agent steers, subagents build
@@ -10,21 +10,33 @@ passed) and to ALL subsequent substantive work in this session. Armed bare:
 acknowledge the mode in one line and proceed. Trivial Q&A stays direct —
 never add dispatch ceremony to a question.
 
+This skill is model-agnostic: "the main agent" is whatever model is running
+this session (Fable, Opus, anything else). Tiers below are ROLES relative to
+the session, not fixed names.
+
 ## The economy
 
-The main agent's context is the scarcest resource in the session, and it
-drains from BOTH sides: output tokens (writing code) and input tokens (reading
-files, raw diffs, verbose reports). Guard both. The main agent spends tokens
-on exactly one thing — judgment: decomposition, decisions, briefs,
-arbitration. Everything mechanical (searching, reading at length, writing
-code, running batteries) happens in disposable subagent contexts, where tokens
-are cheap and forgettable.
+Two scarce resources, guarded separately:
+
+1. **The main agent's context** — drains from BOTH sides: output tokens
+   (writing code) and input tokens (reading files, raw diffs, verbose
+   reports). The main agent spends tokens on exactly one thing — judgment:
+   decomposition, decisions, briefs, arbitration. Everything mechanical
+   (searching, reading at length, writing code, running batteries) happens in
+   disposable subagent contexts.
+2. **The Anthropic usage budget** — session and weekly limits. Gateway-routed
+   third-party models (DeepSeek, GLM, Kimi) spend from a separate, far
+   cheaper pool. Default execution DOWN to that pool; Anthropic tiers are the
+   escalation, not the default. See the offload doctrine in
+   `references/routing.md`.
 
 The product of the main agent's spending is **leverage**: a brief good enough
 that a cheaper model executes at near-top-tier quality. Routing is not fixed
 by the task — it is fixed by the brief. A better brief moves the same task
-DOWN a tier. That trade — planning tokens for cheaper execution tokens — is
-the whole point of this mode.
+DOWN a tier. Quality is held by the discipline — decisions pre-made,
+acceptance criteria runnable, done-claims refuted by independent verifiers —
+not by paying for an expensive first pass. Cheap-and-verified beats
+expensive-and-trusted.
 
 ## Division of labor
 
@@ -33,6 +45,8 @@ the whole point of this mode.
   including the "hard 10%" (see Distillation).
 - Reading verdicts and evidence; arbitrating disagreements; cross-PR conflict
   checks; merge/cleanup mechanics.
+- Team-lead duty when a team is up: task creation, assignment, plan
+  approvals, steering — never claiming implementation tasks itself.
 - Trivial one-liners where dispatch overhead exceeds the work (a brittle test
   string, a stale comment) — fix, note it, move on.
 - Knowledge-distillation writing (CLAUDE.md, design rulings, memory) where the
@@ -44,50 +58,89 @@ implementer-of-record for feature work.
 ## Routing
 
 Governing principle: route by how expensive a mistake is to **detect**, not
-just to make. If tests/linters will catch errors mechanically, route down. If
-errors only surface under judgment (subtle UI fidelity, concurrency, security,
-API design taste), route up or split so the judgment part stays in the brief.
+just to make. If tests/linters will catch errors mechanically, route down —
+retries at DeepSeek prices cost less than first-passes at Opus prices. If
+errors only surface under judgment (subtle UI fidelity, concurrency,
+security, API design taste), route up or split so the judgment part stays in
+the brief.
 
-- **Haiku** — menial/mechanical with a worked example in the brief: bulk
-  renames, file moves, format sweeps, template-driven edits.
-- **Sonnet** — well-specified single-concern work: recon (Explore agents),
-  focused fixes with a detailed brief, doc drafts from an outline, reviewer/
-  verifier duty.
-- **Opus** — multi-file implementation, UI fidelity, anything where first-pass
-  correctness saves review cycles.
-- **Large-context delegate** (if you have one configured) — reads that don't
-  fit anywhere: whole-repo digests, giant logs. Delegates start cold; prompts
-  must be self-contained.
-- Effort routing too, where supported: low effort for mechanical stages, high
-  tiers only for the hardest verify/judge work.
+Read `references/routing.md` at the first dispatch of the session — it holds
+the full model dossiers, the offload doctrine, and the mechanics (gateway
+agent types, thinking control via `effort`). Quick table:
+
+| Route (agent type) | Use for |
+|---|---|
+| session model | judgment only: plans, briefs, arbitration — never bulk work |
+| `opus` | first-pass-correctness-critical or safety-adjacent implementation; subtle multi-file judgment |
+| `glm` — GLM 5.2 | frontend/UI implementation, long agentic runs, terminal-heavy work, repo-scale refactors — the default Opus-slot substitute |
+| `kimi` — Kimi K3 | large-context delegate (whole-repo digests, giant logs), vision/screenshot verification, long-horizon audits, research synthesis |
+| `sonnet` | judgment recon, verifier duty on judgment claims, single-concern fixes needing taste |
+| `ds-pro-max` — DeepSeek V4 Pro, max thinking | budget engineer: algorithms, backend implementation with design content, log-driven debugging, technical verification |
+| `ds-pro` — DeepSeek V4 Pro, thinking off | crisp instruct work: recon digests, distillation, doc drafts, conversions, high-volume single-concern sweeps |
+| `ds-flash` — DeepSeek V4 Flash, max thinking | dirt-cheap backend/utility workhorse — granular fully-specified briefs only |
+| `haiku` | pure-mechanical template edits with a worked example |
+
+Effort routing too, where supported: low effort for mechanical stages, high
+tiers only for the hardest verify/judge work.
 
 **Escalation ladder (on subagent failure):**
 1. Amend the brief naming exactly what went wrong; retry the SAME tier —
    prefer continuing the same agent where the harness supports it (warm
    context, no re-brief cost).
-2. Second failure: up-tier the model, amended brief.
+2. Second failure: up-tier the model — or switch model family at the same
+   tier; families have uncorrelated blind spots, and a family swap is often
+   free where an up-tier isn't.
 3. Top tier fails too: the brief is wrong, not the model. Re-recon,
    rediagnose. The main agent implementing directly is the LAST rung, never a
    shortcut, and gets flagged in the report when it happens.
 
 ## The standard flow
 
-1. **Recon** (parallel Sonnet Explore agents): map the relevant code, return a
-   distilled brief — findings, exact file:line evidence, open questions. Never
-   let an implementer explore from scratch what a cheap agent can map first.
+1. **Recon** (parallel, routed): map the relevant code, return a distilled
+   brief — findings, exact file:line evidence, open questions. Mechanical
+   recon (file maps, symbol traces, log digests) routes to `ds-pro`;
+   judgment recon (architecture assessment, "why is this shaped this way")
+   to Sonnet Explore agents. Never let an implementer explore from scratch
+   what a cheap agent can map first.
 2. **Plan** (main agent): turn briefs into a plan — every decision made
    ("implement exactly this, don't relitigate"), verified fix-point tables,
    acceptance criteria as runnable commands, scope fences. Read
    `references/dispatch.md` at first dispatch for the brief skeleton and the
    standing-orders block to paste.
-3. **Dispatch** (Agent tool; `isolation: worktree` for anything that commits):
-   one branch/PR per concern. Parallel agents get **disjoint file ownership**
-   spelled out both ways; dry-run `git merge-tree` between sibling branches
-   before reporting them compatible. For N-item sweeps or verify panels, use
-   the Workflow tool where available (pipeline + schema outputs) — invoking
-   this skill is the standing opt-in for that orchestration, within session
-   size guidance.
+3. **Dispatch** — pick the vehicle, then the models:
+   - **Subagents** (Agent tool; `isolation: worktree` for anything that
+     commits): the default — result-only work where agents don't need to
+     talk. One branch/PR per concern. Parallel agents get **disjoint file
+     ownership** spelled out both ways; dry-run `git merge-tree` between
+     sibling branches before reporting them compatible.
+   - **Agent team**: when the value comes from interaction between workers —
+     see Agent teams below. Read `references/teams.md` before first spawn.
+   - **Workflow tool** where available, for N-item sweeps or verify panels
+     (pipeline + schema outputs) — invoking this skill is the standing
+     opt-in, within session size guidance.
 4. **Verify** (routed, then arbitrated — see Verification).
+
+## Agent teams — route the collaboration pattern too
+
+Subagents report back and never talk to each other; teammates share a task
+list, message each other directly, and challenge each other's findings. Both
+are dispatch vehicles — choose by whether interaction adds value:
+
+- **Fan-out subagents (default):** result-only work — recon, implementation
+  against a fixed brief, verification. Cheaper, simpler, no coordination tax.
+- **Agent team:** competing-hypothesis debugging (teammates actively refute
+  each other's theories), multi-lens review panels that debate findings,
+  cross-layer features where interface owners negotiate directly instead of
+  routing every question through the lead, research that benefits from live
+  challenge.
+
+Non-negotiables when a team is up (full doctrine in `references/teams.md`):
+the lead is this session and NEVER claims implementation tasks; spawn
+prompts are full briefs — teammates inherit no conversation history;
+teammate models are pinned via the routing agent types (a definition's
+`model` is honored; its `effort` is not — teammates follow the lead's
+effort); disjoint file ownership per teammate; plan approval required for
+implementation teammates.
 
 ## Distillation — what makes a brief carry top-tier quality
 
@@ -100,9 +153,9 @@ of power:
 2. **Write the hard 10% yourself.** Signatures, invariants, the edge-case
    table, pseudocode for the one tricky algorithm — inline in the brief.
    Main-agent output spent here is the cheapest quality lever there is; it is
-   what converts an Opus task into a Sonnet task.
+   what converts an Opus task into a GLM or DeepSeek task.
 3. **One worked example beats ten rules** for repetitive work — it is what
-   converts a Sonnet task into a Haiku task.
+   converts a Sonnet task into a `ds-flash` or Haiku task.
 4. **Pre-mortem the brief:** name the 2–3 most likely wrong turns for THIS
    task ("you will be tempted to X — don't, because Y").
 5. **Pointers, not content.** The subagent reads files itself for cheap —
@@ -123,7 +176,10 @@ The main agent arbitrates; it does not inspect by default.
   (tests with counts vs baseline, lint, CI status) is sufficient evidence.
 - **Tier 1 — judgment work:** an independent verifier agent (never the
   implementer), briefed to REFUTE the done-claim; screenshots for visual
-  work. The main agent reads the verdict, not the diff.
+  work (route those to `kimi` — it reads images). Prefer a verifier from a
+  DIFFERENT model family than the implementer: shared training biases make
+  same-family review rubber-stamp-prone. The main agent reads the verdict,
+  not the diff.
 - **Tier 2 — main agent:** arbitrate implementer/verifier disagreements with
   targeted reads, and personally spot-check the single riskiest claim per
   work-package. This is the legitimate case for the main agent reading code.
@@ -135,12 +191,13 @@ The main agent arbitrates; it does not inspect by default.
 - Long dispatches run in the background; the main agent keeps orchestrating —
   never idles by polling.
 - Project workflow rules (reviewer-bot flows, forbidden-main) bind subagents
-  too — baked into every brief.
+  and teammates alike — baked into every brief and spawn prompt.
 - When a subagent's report contradicts prior beliefs (a doc, a memory, an
   earlier claim), surface the correction explicitly.
-- Final reports include a one-line routing ledger ("routed: 2×Sonnet recon,
-  1×Opus impl, 1×Sonnet verify") — cost visibility, counts the main agent
-  actually performed.
+- Final reports include a one-line routing ledger with the offload split
+  ("routed: 2×ds-pro recon, 1×glm impl, 1×kimi verify, 1×sonnet arbitration
+  — Anthropic tokens spent on judgment only") — cost visibility, counts the
+  main agent actually performed.
 
 Named failure modes — self-check for these:
 - **Ceremony dispatch:** an agent to read one file you already know. The point
@@ -148,10 +205,16 @@ Named failure modes — self-check for these:
 - **Orchestrator drift:** the main agent "just quickly" editing implementation
   files as the session wears on. The drift is gradual — checkpoint whenever
   about to Edit anything that isn't a brief, doc, or merge mechanic.
+- **Premium-by-default:** dispatching Anthropic tiers for work a gateway
+  model executes identically under the same brief. The inverse failure —
+  routing judgment work to a cheap model to save tokens — is just as named:
+  quality is never the trade.
 - **Brief bloat:** pasting whole docs into briefs. Distill and point.
 - **Context flooding:** letting raw dumps, full diffs, or unshaped reports
   flow back into the main context. Reports have a required shape; hold agents
-  to it.
+  to it. Oversized-but-necessary reads get a `ds-pro` or `kimi` distillation
+  pass before anything reaches the main context.
 - **Rubber-stamp review:** accepting "all tests pass" without counts vs
-  baseline.
-- **Parallelism theater:** splitting inherently serial work to look thorough.
+  baseline — and same-family verifier pairings on judgment work.
+- **Parallelism theater:** splitting inherently serial work to look thorough
+  — and spawning a team where fan-out subagents would do.

@@ -4,6 +4,13 @@ Read once per session, at first dispatch. The skeleton is a starting shape,
 not a form to fill — drop sections that don't apply, never pad. The
 standing-orders block is pasted VERBATIM at the end of every dispatch prompt.
 
+The same skeleton serves subagent briefs and teammate spawn prompts alike —
+teammates additionally get the team appendix from `teams.md`. Model choice
+per brief comes from `routing.md`; note in the brief's Context line which
+route it was written for, since brief granularity is what makes cheap routes
+safe (`ds-flash` needs the fix-point map and worked example filled; `opus`
+can tolerate gaps that would sink a gateway model).
+
 ## Brief skeleton
 
 ```
