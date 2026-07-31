@@ -6,7 +6,7 @@ standing-orders block is pasted VERBATIM at the end of every dispatch prompt,
 and the comms block is pasted alongside it in every dispatch.
 
 The same skeleton serves subagent briefs and teammate spawn prompts alike —
-teammates additionally get the team appendix from `teams.md`. Model choice
+teammates also get the team appendix from `teams.md`. Model choice
 per brief comes from `routing.md`; note in the brief's Context line which
 route it was written for, since brief granularity is what makes cheap routes
 safe (`ds-flash` needs the fix-point map and worked example filled; `opus`

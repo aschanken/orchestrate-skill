@@ -77,6 +77,38 @@ Routing inside a team follows `routing.md` unchanged: `glm` implementers,
 Anthropic tiers where judgment demands. A mixed-family panel is a feature
 for review teams — uncorrelated blind spots argue better.
 
+## Cross-model team composition
+
+Governing rule: **diversity where judgment is contested, uniformity where
+throughput matters.** Mix families for parallel thinking, never for
+parallel typing.
+
+- **Design critique pair.** The lead or `opus` authors the design; a
+  `ds-pro-max` teammate attacks the engineering (not the taste) BEFORE
+  implementation starts. A different lineage catches what same-family
+  review cannot.
+- **Mixed-family review panel.** `sonnet` on the security lens, `ds-pro-max`
+  on the correctness/algorithmic lens, `glm` on the integration/frontend
+  lens — all reviewing the same diff and debating. Cross-family
+  disagreement is the high-signal event; agreement ACROSS families is far
+  stronger evidence than agreement within one.
+- **Implement / refute pair.** `glm` implements the UI; `kimi` refutes it
+  from screenshots. Uncorrelated blind spots.
+- **Competing-hypothesis debugging with family diversity.** One hypothesis
+  per teammate, each on a DIFFERENT family, so shared training priors
+  cannot anchor the whole team on the same wrong theory. This is the
+  strongest available use of a mixed team.
+- **Context-tiered team.** `kimi` holds the whole-repo picture at 1M
+  context and acts as the consistency oracle; `sonnet` teammates work
+  focused slices; `kimi` cross-checks each slice against the global view.
+- **Second-opinion escalation inside a team.** When a teammate stalls
+  twice, the lead spawns a different-family teammate on the SAME task with
+  the failed attempt attached, briefed to approach it differently rather
+  than to continue it.
+
+Mixed-family teams cost marginal cash, so they are for contested judgment,
+not for routine parallel work.
+
 ## Task list discipline
 
 - Decompose to self-contained deliverables (a function, a test file, a

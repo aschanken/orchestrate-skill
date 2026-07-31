@@ -10,6 +10,7 @@ import importlib.util
 import io
 import json
 import os
+import re
 import tempfile
 import unittest
 from contextlib import redirect_stdout
@@ -225,6 +226,66 @@ class FileInputTests(unittest.TestCase):
             data = json.loads(out)
             self.assertEqual(data["words"], 5)
             self.assertEqual(code, 0)
+
+
+class ShowFlagTests(unittest.TestCase):
+    """--show prints one line per violation with original-input line numbers."""
+
+    def test_show_prints_one_line_per_violation(self):
+        text = "The file was utilized.\n"
+        code, out = run_cli(["--show"], stdin_text=text)
+        vlines = [l for l in out.splitlines() if re.match(r"^\d+:[a-z_]+: ", l)]
+        self.assertEqual(len(vlines), 3)  # banned_word, passive_voice, vague_referent
+        self.assertTrue(any(l.startswith("1:banned_word:") for l in vlines), vlines)
+        self.assertTrue(any(l.startswith("1:passive_voice:") for l in vlines), vlines)
+        self.assertTrue(any(l.startswith("1:vague_referent:") for l in vlines), vlines)
+        self.assertEqual(code, 1)
+
+    def test_show_line_numbers_survive_fenced_code(self):
+        text = ("Status: done\n\n```\nutilize leverage seamless\n```\n\n"
+                "The file was utilized.\n")
+        code, out = run_cli(["--show"], stdin_text=text)
+        vlines = [l for l in out.splitlines() if re.match(r"^\d+:", l)]
+        self.assertTrue(vlines, "no violation lines printed")
+        self.assertTrue(all(l.startswith("7:") for l in vlines),
+                        "expected all violations on line 7, got: %r" % vlines)
+
+    def test_show_clean_text_prints_no_violation_lines(self):
+        code, out = run_cli(["--show"], stdin_text="The parser reads src/main.py:42.\n")
+        self.assertFalse(any(re.match(r"^\d+:", l) for l in out.splitlines()))
+        self.assertEqual(code, 0)
+
+    def test_show_does_not_change_score_or_exit_code(self):
+        text = ("It is important to note that the file was utilized to "
+                "facilitate several seamless improvements which were then "
+                "leveraged.\n")
+        code_plain, out_plain = run_cli([], stdin_text=text)
+        code_show, out_show = run_cli(["--show"], stdin_text=text)
+        self.assertEqual(code_plain, code_show)
+        self.assertEqual(code_plain, 1)
+        plain = [l for l in out_plain.splitlines() if l.startswith("score:")]
+        shown = [l for l in out_show.splitlines() if l.startswith("score:")]
+        self.assertEqual(plain, shown)
+
+    def test_show_anchors_long_sentence_and_paragraph_start_lines(self):
+        long_s = ("This sentence contains more than twenty words in total and "
+                  "it keeps going well past the threshold without stopping "
+                  "for a moment.")
+        text = "Short.\n" + long_s + "\n\nOne. Two. Three. Four. Five. Six. Seven.\n"
+        code, out = run_cli(["--show"], stdin_text=text)
+        vlines = [l for l in out.splitlines() if re.match(r"^\d+:", l)]
+        self.assertTrue(any(l.startswith("2:long_sentence:") for l in vlines), vlines)
+        self.assertTrue(any(l.startswith("4:long_paragraph:") for l in vlines), vlines)
+
+    def test_show_ignored_when_json_requested(self):
+        text = "The file was utilized.\n"
+        _, out = run_cli(["--json", "--show"], stdin_text=text)
+        data = json.loads(out)
+        self.assertEqual(
+            sorted(data.keys()),
+            sorted(["counts", "total", "words", "score", "missing_status_line"]),
+        )
+        self.assertNotIn("locations", data)
 
 
 if __name__ == "__main__":

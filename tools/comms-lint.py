@@ -16,7 +16,12 @@ absolute path starting with /.
 
 CLI:
     python3 tools/comms-lint.py [FILE ...] [--mode report|message]
-                                [--max-score FLOAT] [--json]
+                                [--max-score FLOAT] [--show] [--json]
+
+--show prints one line per violation after the summary:
+    <line>:<category>: <matched text, trimmed to 60 chars>
+Line numbers are 1-indexed against the ORIGINAL input text; --show never
+changes the score, the exit code, or --json output.
 
 Exit code 0 when score <= --max-score and no missing status line; 1
 otherwise, so the tool works as an acceptance-criteria command.
@@ -96,20 +101,33 @@ VAGUE_QUANTIFIERS = [
 ]
 
 # --- code stripping ------------------------------------------------------
+# Stripped lines are replaced with EMPTY lines, never deleted, so line
+# numbers in the stripped text match the original input 1:1; stripped
+# regions simply score nothing (empty lines contribute no words or
+# sentences).
 
-FENCED_BLOCK = re.compile(r"```.*?(?:```|$)", re.S)
-INDENTED_BLOCK = re.compile(r"(?m)^[ \t]{4,}.*$")
+FENCE_LINE = re.compile(r"^\s*```")
+INDENTED_LINE = re.compile(r"^[ \t]{4,}")
 
 
 def strip_code(text):
-    """Remove fenced code blocks and 4-space-indented blocks from text.
+    """Blank fenced code lines and 4-space-indented lines.
 
     Inline backtick spans are deliberately NOT removed: they stay as text
     and satisfy the vague_referent resolvable-referent exception.
     """
-    text = FENCED_BLOCK.sub(" ", text)
-    text = INDENTED_BLOCK.sub(" ", text)
-    return text
+    lines = text.split("\n")
+    in_fence = False
+    for i, line in enumerate(lines):
+        if FENCE_LINE.match(line):
+            if line.count("```") % 2 == 1:  # one marker toggles; "```x```" is balanced
+                in_fence = not in_fence
+            lines[i] = ""
+        elif in_fence:
+            lines[i] = ""
+        elif INDENTED_LINE.match(line):
+            lines[i] = ""
+    return "\n".join(lines)
 
 
 # --- sentence splitting --------------------------------------------------
@@ -131,10 +149,31 @@ def _protect_dots(text):
     return text
 
 
+def split_sentence_spans(text):
+    """Split text into (sentence, start_offset) pairs.
+
+    The start offset is a character index valid against `text` itself, so
+    callers can map each sentence back to its original line number.
+    """
+    protected = _protect_dots(text)
+    out = []
+    last = 0
+    for m in SENT_SPLIT.finditer(protected):
+        part = protected[last:m.start()]
+        stripped = part.replace("\x00", ".").strip()
+        if stripped:
+            out.append((stripped, last + len(part) - len(part.lstrip())))
+        last = m.end()
+    tail = protected[last:]
+    if tail.strip():
+        stripped = tail.replace("\x00", ".").strip()
+        out.append((stripped, last + len(tail) - len(tail.lstrip())))
+    return out
+
+
 def split_sentences(text):
     """Split text into sentences using the [.!?]+whitespace rule."""
-    parts = SENT_SPLIT.split(_protect_dots(text))
-    return [p.replace("\x00", ".").strip() for p in parts if p.strip()]
+    return [s for s, _ in split_sentence_spans(text)]
 
 
 # --- per-category patterns -----------------------------------------------
@@ -195,40 +234,86 @@ def check_status_line(text):
 
 # --- linting -------------------------------------------------------------
 
-def count_phrases(text, phrases):
-    """Case-insensitive, whole-phrase count for a wordlist."""
+def phrase_matches(text, phrases):
+    """Case-insensitive whole-phrase matches; yields (phrase, (start, end))."""
     low = text.lower()
-    return sum(
-        len(re.findall(r"(?<![a-z])" + re.escape(ph) + r"(?![a-z])", low))
-        for ph in phrases
-    )
+    for ph in phrases:
+        pat = r"(?<![a-z])" + re.escape(ph) + r"(?![a-z])"
+        for m in re.finditer(pat, low):
+            yield ph, m.span()
+
+
+def para_spans(text):
+    """Split text into (paragraph, start_offset) on blank-line boundaries."""
+    out = []
+    last = 0
+    for m in re.finditer(r"\n\s*\n", text):
+        part = text[last:m.start()]
+        stripped = part.strip()
+        if stripped:
+            out.append((stripped, last + len(part) - len(part.lstrip())))
+        last = m.end()
+    tail = text[last:]
+    if tail.strip():
+        out.append((tail.strip(), last + len(tail) - len(tail.lstrip())))
+    return out
+
+
+def line_of(text, offset):
+    """1-indexed line number of character `offset` in `text`."""
+    return text.count("\n", 0, offset) + 1
+
+
+def display_text(text):
+    """Collapse whitespace and trim to 60 chars for --show output."""
+    return re.sub(r"\s+", " ", text.strip())[:60]
+
+
+def _record(locations, counts, stripped, offset, cid, matched):
+    """Register one violation: count it and store its (line, category, text)."""
+    counts[cid] += 1
+    locations.append((line_of(stripped, offset), cid, display_text(matched)))
 
 
 def lint_text(text, mode="message"):
-    """Produce the full result dict for one combined message."""
+    """Produce the full result dict for one combined message.
+
+    The dict carries an extra "locations" key: (line, category, matched text
+    trimmed to 60 chars), sorted at print time. The CLI strips it before
+    JSON output so --json keeps its exact shape.
+    """
     stripped = strip_code(text)
-    sentences = split_sentences(stripped)
     words = len(stripped.split())
 
     counts = {cid: 0 for cid in CATEGORY_IDS}
-    for s in sentences:
-        if len(s.split()) > 20:
-            counts["long_sentence"] += 1
-        counts["passive_voice"] += len(PASSIVE_RE.findall(s))
-        counts["nominalization"] += len(NOMINALIZATION_RE.findall(s))
-        counts["phrasal_verb"] += count_phrases(s, PHRASAL_VERBS)
-        counts["marketing_adjective"] += count_phrases(s, MARKETING_ADJECTIVES)
-        counts["hedge_opener"] += count_phrases(s, HEDGE_OPENERS)
-        counts["banned_word"] += count_phrases(s, BANNED_WORDS)
+    locations = []
+
+    for sent, start in split_sentence_spans(stripped):
+        if len(sent.split()) > 20:
+            _record(locations, counts, stripped, start, "long_sentence", sent)
+        for m in PASSIVE_RE.finditer(sent):
+            _record(locations, counts, stripped, start + m.start(), "passive_voice", m.group(0))
+        for m in NOMINALIZATION_RE.finditer(sent):
+            _record(locations, counts, stripped, start + m.start(), "nominalization", m.group(0))
+        for ph, (a, _b) in phrase_matches(sent, PHRASAL_VERBS):
+            _record(locations, counts, stripped, start + a, "phrasal_verb", ph)
+        for ph, (a, _b) in phrase_matches(sent, MARKETING_ADJECTIVES):
+            _record(locations, counts, stripped, start + a, "marketing_adjective", ph)
+        for ph, (a, _b) in phrase_matches(sent, HEDGE_OPENERS):
+            _record(locations, counts, stripped, start + a, "hedge_opener", ph)
+        for ph, (a, _b) in phrase_matches(sent, BANNED_WORDS):
+            _record(locations, counts, stripped, start + a, "banned_word", ph)
         # The rule-8 exception: a resolvable referent in the SAME sentence
         # suppresses vague_referent. Flagging "the file src/main.py:42 is
         # stale" as vague would be actively harmful, so this is per-sentence.
-        if VAGUE_REFERENT_RE.search(s) and not REFERENT_RE.search(s):
-            counts["vague_referent"] += len(VAGUE_REFERENT_RE.findall(s))
-        counts["vague_quantifier"] += len(VAGUE_QUANTIFIER_RE.findall(s))
-    for para in re.split(r"\n\s*\n", stripped):
-        if para.strip() and len(split_sentences(para)) > 6:
-            counts["long_paragraph"] += 1
+        if VAGUE_REFERENT_RE.search(sent) and not REFERENT_RE.search(sent):
+            for m in VAGUE_REFERENT_RE.finditer(sent):
+                _record(locations, counts, stripped, start + m.start(), "vague_referent", m.group(0))
+        for m in VAGUE_QUANTIFIER_RE.finditer(sent):
+            _record(locations, counts, stripped, start + m.start(), "vague_quantifier", m.group(0))
+    for para, start in para_spans(stripped):
+        if len(split_sentences(para)) > 6:
+            _record(locations, counts, stripped, start, "long_paragraph", para)
 
     total = sum(counts.values())
     score = round(total * 100.0 / words, 2) if words else 0.0
@@ -239,6 +324,7 @@ def lint_text(text, mode="message"):
         "words": words,
         "score": score,
         "missing_status_line": missing_status,
+        "locations": locations,
     }
 
 
@@ -266,6 +352,9 @@ def main(argv=None, stdin=None):
                         help="report mode also checks the first line for a status marker")
     parser.add_argument("--max-score", type=float, default=3.0,
                         help="exit 1 when score exceeds this (default 3.0)")
+    parser.add_argument("--show", action="store_true",
+                        help="after the summary, print one line per violation: "
+                             "line:category: matched text")
     parser.add_argument("--json", action="store_true",
                         help="emit one JSON object instead of human-readable output")
     args = parser.parse_args(argv if argv is not None else sys.argv[1:])
@@ -282,9 +371,12 @@ def main(argv=None, stdin=None):
 
     result = lint_text(text, args.mode)
     if args.json:
-        print(json.dumps(result))
+        print(json.dumps({k: v for k, v in result.items() if k != "locations"}))
     else:
         print_human(result)
+        if args.show:
+            for line, cid, matched in sorted(result["locations"], key=lambda x: (x[0], x[1])):
+                print(f"{line}:{cid}: {matched}")
 
     failed = result["score"] > args.max_score or bool(result["missing_status_line"])
     return 1 if failed else 0

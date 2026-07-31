@@ -24,11 +24,17 @@ Two scarce resources, guarded separately:
    decomposition, decisions, briefs, arbitration. Everything mechanical
    (searching, reading at length, writing code, running batteries) happens in
    disposable subagent contexts.
-2. **The Anthropic usage budget** — session and weekly limits. Gateway-routed
-   third-party models (DeepSeek, GLM, Kimi) spend from a separate, far
-   cheaper pool. Default execution DOWN to that pool; Anthropic tiers are the
-   escalation, not the default. See the offload doctrine in
-   `references/routing.md`.
+2. **Three separate budgets, not one.** (a) Prepaid Anthropic capacity —
+   Sonnet and Opus draw on session/weekly limits already paid for; unspent
+   capacity is wasted capacity, and the marginal cost of Sonnet reading
+   files or building context is zero. (b) The Fable weekly allowance — the
+   genuinely scarce Anthropic resource, conserved for the lead/judgment
+   seat. (c) Marginal cash — DeepSeek, GLM, and Kimi bill real dollars per
+   token through the gateway. **Commodity work goes to prepaid capacity.
+   Cash buys differentiation, never volume.** The test for every gateway
+   dispatch: what does this route provide that a prepaid Sonnet does not?
+   When Anthropic session/weekly limits ARE under pressure, gateway models
+   absorb volume instead — see the spend doctrine in `references/routing.md`.
 
 The product of the main agent's spending is **leverage**: a brief good enough
 that a cheaper model executes at near-top-tier quality. Routing is not fixed
@@ -65,20 +71,23 @@ security, API design taste), route up or split so the judgment part stays in
 the brief.
 
 Read `references/routing.md` at the first dispatch of the session — it holds
-the full model dossiers, the offload doctrine, and the mechanics (gateway
+the full model dossiers, the spend doctrine, and the mechanics (gateway
 agent types, thinking control via `effort`). Quick table:
 
-| Route (agent type) | Use for |
+| Route | Use for |
 |---|---|
 | session model | judgment only: plans, briefs, arbitration — never bulk work |
-| `opus` | first-pass-correctness-critical or safety-adjacent implementation; subtle multi-file judgment |
-| `glm` — GLM 5.2 | frontend/UI implementation, long agentic runs, terminal-heavy work, repo-scale refactors — the default Opus-slot substitute |
-| `kimi` — Kimi K3 | large-context delegate (whole-repo digests, giant logs), vision/screenshot verification, long-horizon audits, research synthesis |
-| `sonnet` | judgment recon, verifier duty on judgment claims, single-concern fixes needing taste |
-| `ds-pro-max` — DeepSeek V4 Pro, max thinking | budget engineer: algorithms, backend implementation with design content, log-driven debugging, technical verification |
-| `ds-pro` — DeepSeek V4 Pro, thinking off | crisp instruct work: recon digests, distillation, doc drafts, conversions, high-volume single-concern sweeps |
-| `ds-flash` — DeepSeek V4 Flash, max thinking | dirt-cheap backend/utility workhorse — granular fully-specified briefs only |
+| `opus` | correctness-critical or safety-adjacent implementation; subtle multi-file judgment |
+| `sonnet` | DEFAULT for recon, file reading, context building, distillation, single-concern fixes, verifier duty — prepaid, so it is the first choice for commodity work |
 | `haiku` | pure-mechanical template edits with a worked example |
+| `glm` — GLM 5.2 | frontend/UI implementation, long agentic runs, terminal-heavy work, repo-scale refactors |
+| `kimi` — Kimi K3 | large-context delegate (whole-repo digests, giant logs), vision/screenshot verification, research synthesis |
+| `ds-pro-max` — DeepSeek V4 Pro, max thinking | technical code authoring, algorithms, engineering critique and second opinions, log-driven debugging — the fresh-perspective seat |
+| `ds-pro` — DeepSeek V4 Pro, thinking off | RESERVE: fast bulk instruct work when Anthropic quota is under pressure |
+| `ds-flash` — DeepSeek V4 Flash, max thinking | RESERVE: high-volume mechanical work when Anthropic quota is under pressure |
+
+Claude tiers dispatch as `model:` on a generic agent type (e.g.
+`general-purpose`); gateway models dispatch as `subagent_type:` directly.
 
 Effort routing too, where supported: low effort for mechanical stages, high
 tiers only for the hardest verify/judge work.
@@ -97,11 +106,12 @@ tiers only for the hardest verify/judge work.
 ## The standard flow
 
 1. **Recon** (parallel, routed): map the relevant code, return a distilled
-   brief — findings, exact file:line evidence, open questions. Mechanical
-   recon (file maps, symbol traces, log digests) routes to `ds-pro`;
-   judgment recon (architecture assessment, "why is this shaped this way")
-   to Sonnet Explore agents. Never let an implementer explore from scratch
-   what a cheap agent can map first.
+   brief — findings, exact file:line evidence, open questions. Recon routes
+   to Sonnet by default (prepaid) — mechanical recon (file maps, symbol
+   traces, log digests) and judgment recon (architecture assessment, "why
+   is this shaped this way") alike. Use Explore agents for broad searches.
+   Never let an implementer explore from scratch what a recon pass can map
+   first.
 2. **Plan** (main agent): turn briefs into a plan — every decision made
    ("implement exactly this, don't relitigate"), verified fix-point tables,
    acceptance criteria as runnable commands, scope fences. Read
@@ -220,10 +230,11 @@ Named failure modes — self-check for these:
 - **Orchestrator drift:** the main agent "just quickly" editing implementation
   files as the session wears on. The drift is gradual — checkpoint whenever
   about to Edit anything that isn't a brief, doc, or merge mechanic.
-- **Premium-by-default:** dispatching Anthropic tiers for work a gateway
-  model executes identically under the same brief. The inverse failure —
-  routing judgment work to a cheap model to save tokens — is just as named:
-  quality is never the trade.
+- **Cash-for-commodity:** spending gateway dollars on work a prepaid Sonnet
+  executes identically under the same brief — the cost is real and the
+  differentiation is zero. The inverse failure — routing judgment work down
+  to a cheap model to save tokens — is just as named: quality is never the
+  trade.
 - **Brief bloat:** pasting whole docs into briefs. Distill and point.
 - **Context flooding:** letting raw dumps, full diffs, or unshaped reports
   flow back into the main context. Reports have a required shape; hold agents
