@@ -100,9 +100,9 @@ tiers only for the hardest verify/judge work.
    prefer continuing the same agent where the harness supports it (warm
    context, no re-brief cost). A `ds-flash` failure almost always means the
    brief left something unspecified: fix the brief, not the routing.
-2. Second failure: move UP into Anthropic subscription capacity — Sonnet,
-   then Opus. Do not move sideways into a cash-billed gateway model to save
-   face; that spends real money on a problem the brief caused.
+2. Second failure: move UP a tier, or into a different model family —
+   Sonnet, then Opus, or a cash-billed gateway model. A different-family
+   move on repeat failure is legitimate, not a face-saving spend.
 3. Top tier fails too: the brief is wrong, not the model. Re-recon,
    rediagnose. The main agent implementing directly is the LAST rung, never a
    shortcut, and gets flagged in the report when it happens.
