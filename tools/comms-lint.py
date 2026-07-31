@@ -70,9 +70,12 @@ MARKETING_ADJECTIVES = [
     "unlock", "unleash", "empower", "empowers",
 ]
 
+# "as mentioned" and "as noted above" are NOT here: comms.md:71 lists them
+# under rule 5 (resolvable referents), so VAGUE_REFERENTS owns them. Listing
+# them in both scored one phrase as two violations.
 HEDGE_OPENERS = [
     "it is important to note", "it should be noted", "it is worth noting",
-    "please note that", "as mentioned", "as noted above",
+    "please note that",
     "i think", "i believe", "it seems", "presumably", "arguably",
     "in my opinion",
 ]

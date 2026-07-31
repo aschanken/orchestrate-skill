@@ -164,6 +164,34 @@ class CarryOutPhrasalVerbTests(unittest.TestCase):
             comms.lint_text("We will perform an analysis.")["counts"]["nominalization"], 1)
 
 
+class BackReferencePhraseOwnershipTests(unittest.TestCase):
+    """comms.md:71 lists "as mentioned above" under rule 5 (resolvable
+    referents). comms.md:83-85 names the hedge openers and does not include
+    it. So vague_referent owns the phrase and hedge_opener does not."""
+
+    def test_as_mentioned_scores_referent_only(self):
+        for text in ("As mentioned, the build failed.",
+                     "As noted above, the build failed."):
+            counts = comms.lint_text(text)["counts"]
+            self.assertEqual(counts["vague_referent"], 1, text)
+            self.assertEqual(counts["hedge_opener"], 0, text)
+
+    def test_as_mentioned_is_not_double_counted(self):
+        counts = comms.lint_text("As mentioned, the build failed.")["counts"]
+        self.assertEqual(counts["vague_referent"] + counts["hedge_opener"], 1)
+
+    def test_resolvable_referent_suppresses_the_phrase(self):
+        text = "As mentioned in src/main.py:42, the build failed."
+        self.assertEqual(comms.lint_text(text)["counts"]["vague_referent"], 0)
+
+    def test_real_hedge_openers_still_fire(self):
+        for text in ("It is important to note that the build failed.",
+                     "It is worth noting that the build failed.",
+                     "I think this is wrong."):
+            self.assertEqual(
+                comms.lint_text(text)["counts"]["hedge_opener"], 1, text)
+
+
 class VagueReferentExceptionTests(unittest.TestCase):
     """Rule-8 exception: a resolvable referent in the same sentence
     suppresses vague_referent. This is the most important behavior of the
