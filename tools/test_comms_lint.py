@@ -115,6 +115,37 @@ class PassivePredicateAdjectiveTests(unittest.TestCase):
             self.assertEqual(self._count(text), 1, text)
 
 
+class NominalizationGerundTests(unittest.TestCase):
+    """comms.md:65 ("Use plain verbs") targets light verb + noun, such as
+    "perform an analysis". An -ing word after a light verb is only a noun
+    when a determiner marks it or when it ends the phrase; otherwise it is an
+    adjective modifying the next noun."""
+
+    def _count(self, text):
+        return comms.lint_text(text)["counts"]["nominalization"]
+
+    def test_adjectival_ing_is_not_a_nominalization(self):
+        for text in ("Do interesting work today please now.",
+                     "Provide interesting examples now.",
+                     "Make outstanding progress today."):
+            self.assertEqual(self._count(text), 0, text)
+
+    def test_ing_nominalization_with_determiner_still_fires(self):
+        self.assertEqual(self._count("Do the reporting now."), 1)
+
+    def test_ing_nominalization_at_phrase_end_still_fires(self):
+        for text in ("We will perform testing.",
+                     "Provide training to the team.",
+                     "Conduct monitoring of the queue."):
+            self.assertEqual(self._count(text), 1, text)
+
+    def test_suffix_nominalizations_still_fire(self):
+        for text in ("We will perform an analysis of the results.",
+                     "Provide confirmation now.",
+                     "Make an assessment today."):
+            self.assertEqual(self._count(text), 1, text)
+
+
 class VagueReferentExceptionTests(unittest.TestCase):
     """Rule-8 exception: a resolvable referent in the same sentence
     suppresses vague_referent. This is the most important behavior of the

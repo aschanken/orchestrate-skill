@@ -193,9 +193,19 @@ PASSIVE_RE = re.compile(
     rf"\b{BE_VERB}\s+(?:{PASSIVE_ADV}\s+)?(?:[a-z]{{2,}}ed|{PP_IRREG})\b", re.I
 )
 
+# -tion/-ment/-ance/-ence/-sis after a light verb are reliably nouns.
+NOMINAL_SUFFIX = r"(?:tion|ment|ance|ence|sis)"
+# -ing is ambiguous: "do the reporting" is a nominalization, "do interesting
+# work" is an adjective modifying "work". An -ing word counts as a noun only
+# when a determiner marks it, or when it ends the phrase: end of text,
+# punctuation, or a following function word.
+ING_TAIL = (r"(?=$|[.,;:!?)]|\s+(?:of|on|for|to|in|at|with|from|by|into|"
+            r"and|or|that|which|because|so|but)(?![a-z]))")
 NOMINALIZATION_RE = re.compile(
     r"\b(?:perform|conduct|provide|carry out|make|do)\s+"
-    r"(?:(?:a|an|the)\s+)?[a-z]{2,}(?:tion|ment|ance|ence|sis|ing)\b",
+    r"(?:(?:a|an|the)\s+[a-z]{2,}(?:" + NOMINAL_SUFFIX + r"|ing)\b"
+    r"|[a-z]{2,}" + NOMINAL_SUFFIX + r"\b"
+    r"|[a-z]{2,}ing\b" + ING_TAIL + r")",
     re.I,
 )
 
