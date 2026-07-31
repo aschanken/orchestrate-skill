@@ -363,8 +363,12 @@ def main(argv=None, stdin=None):
     if args.files:
         chunks = []
         for path in args.files:
-            with open(path, encoding="utf-8") as fh:
-                chunks.append(fh.read())
+            try:
+                with open(path, encoding="utf-8") as fh:
+                    chunks.append(fh.read())
+            except OSError as exc:
+                print(f"comms-lint: cannot read {path}: {exc}", file=sys.stderr)
+                return 1
         text = "\n".join(chunks)
     else:
         stream = stdin if stdin is not None else sys.stdin

@@ -13,7 +13,7 @@ import os
 import re
 import tempfile
 import unittest
-from contextlib import redirect_stdout
+from contextlib import redirect_stderr, redirect_stdout
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 MODULE_PATH = os.path.join(HERE, "comms-lint.py")
@@ -226,6 +226,28 @@ class SentenceSplittingTests(unittest.TestCase):
 
     def test_ellipsis_does_not_split_sentences(self):
         self.assertEqual(len(comms.split_sentences("Wait for it... then go.")), 1)
+
+
+class MissingFileTests(unittest.TestCase):
+    """An unreadable input path must not crash with a raw traceback."""
+
+    def test_missing_file_reports_one_line_on_stderr_and_exits_nonzero(self):
+        buf = io.StringIO()
+        with redirect_stderr(buf):
+            code = comms.main(["/nonexistent/path/foo.txt"], stdin=io.StringIO(""))
+        self.assertNotEqual(code, 0)
+        lines = buf.getvalue().strip().splitlines()
+        self.assertEqual(len(lines), 1, buf.getvalue())
+        self.assertIn("/nonexistent/path/foo.txt", lines[0])
+
+    def test_readable_file_still_lints_cleanly(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = os.path.join(d, "ok.txt")
+            with open(p, "w") as fh:
+                fh.write("The parser reads src/main.py:42.\n")
+            code, out = run_cli([p])
+            self.assertEqual(code, 0)
+            self.assertIn("score: 0.00", out)
 
 
 class FileInputTests(unittest.TestCase):
