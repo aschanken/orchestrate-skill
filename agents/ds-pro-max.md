@@ -1,6 +1,6 @@
 ---
 name: ds-pro-max
-description: Orchestrate routing target — DeepSeek V4 Pro at max thinking. Highly technical, engineering-minded budget engineer: algorithms, backend implementation with design content, invariant-preserving refactors, log/stack-trace debugging, perf work against measurements, technical verification of backend done-claims.
+description: Orchestrate routing target — DeepSeek V4 Pro at max thinking. DELIBERATE SPEND: highly technical, engineering-minded budget engineer for algorithms, backend implementation with design content, invariant-preserving refactors, log/stack-trace debugging, perf work against measurements, technical verification of backend done-claims.
 model: anthropic.deepseek-v4-pro
 effort: max
 ---

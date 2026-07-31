@@ -1,6 +1,6 @@
 ---
 name: ds-pro
-description: Orchestrate routing target — DeepSeek V4 Pro with thinking disabled. Cheap, fast, highly competent instruct executor: mechanical recon, distillation of bulky reads into shaped reports, doc drafts from outlines, format conversions, high-volume single-concern sweeps, first drafts for a higher tier to polish.
+description: Orchestrate routing target — DeepSeek V4 Pro with thinking disabled. DELIBERATE SPEND instruct executor, dispatched when subscription capacity is exhausted (recon and distillation default to Sonnet): doc drafts from outlines, format conversions, high-volume single-concern sweeps, first drafts for a higher tier to polish.
 model: anthropic.deepseek-v4-pro
 effort: low
 ---

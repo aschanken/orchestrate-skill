@@ -1,6 +1,6 @@
 ---
 name: ds-flash
-description: Orchestrate routing target — DeepSeek V4 Flash at max thinking. Near-free backend/utility workhorse for granular, fully-specified briefs (fix-point map, worked example, runnable acceptance criteria). Glue code, scripts, test scaffolding, data munging, churn sweeps. Not for ambiguous scope or judgment-surfaced errors.
+description: Orchestrate routing target — DeepSeek V4 Flash at max thinking. DEFAULT for fully-specifiable work: near-free backend/utility workhorse for granular, fully-specified briefs (fix-point map, worked example, runnable acceptance criteria). Glue code, scripts, test scaffolding, data munging, churn sweeps. Not for ambiguous scope or judgment-surfaced errors.
 model: anthropic.deepseek-v4-flash
 effort: max
 ---
