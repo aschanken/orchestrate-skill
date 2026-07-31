@@ -57,6 +57,7 @@ block — plus a team appendix:
 - Messaging: coordinate directly with <names> on <specific interfaces or
   disputes>; keep messages distilled (conclusions + file:line evidence,
   never raw dumps). Route decision forks to the lead.
+- Comms: every message you send obeys the comms block in this prompt. Peer messages carry the same evidence and confidence marking as reports to the lead.
 - File ownership: you own <paths>; <teammate> owns <paths>; do not cross.
 ```
 
@@ -89,6 +90,17 @@ for review teams — uncorrelated blind spots argue better.
 - Task status can lag (known limitation): a "stuck" task means check whether
   the work actually finished, then update status or nudge the teammate by
   name.
+
+## Message discipline
+
+Peer-to-peer messages obey the comms standard exactly as reports do. A
+teammate's message to another teammate carries file:line evidence and a
+CONFIRMED/UNCERTAIN/REFUTED marker, never a bare assertion. Task-list
+`subject` fields are imperative and name their target (`Fix retry backoff in
+src/net/client.py`, not `Fix the client bug`); task `description` fields state
+acceptance criteria. Unmarked-confidence claims propagating between teammates
+is the specific failure this prevents — a bare "this works" forwarded through
+two hops becomes an uncheckable assertion by the third.
 
 ## Plan approval
 

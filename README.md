@@ -85,6 +85,12 @@ reports are held to a required shape with no raw diffs or file dumps.
   premium-by-default routing (and its inverse: routing judgment work down to
   save tokens), brief bloat, context flooding, rubber-stamp review,
   parallelism theater, team-for-the-sake-of-it.
+- **A communication standard between agents** — adapts ASD-STE100 Simplified
+  Technical English for machine readers and adds what STE lacks: evidence
+  attribution, confidence marking, and referent precision. It binds every
+  channel (briefs, reports, spawn prompts, teammate messages, workflow
+  prompts, task-list entries) and is mechanically scored by
+  `tools/comms-lint.py`.
 
 ## Layout
 
@@ -99,6 +105,10 @@ reports are held to a required shape with no raw diffs or file dumps.
 - `orchestrate/references/teams.md` — read before the first teammate spawn:
   when a team beats fan-out, lead discipline, spawn-prompt shape, task-list
   and plan-approval rules.
+- `orchestrate/references/comms.md` — read once per session: the inter-agent
+  communication standard and its pasteable comms block.
+- `tools/comms-lint.py` — mechanical compliance scoring for the comms
+  standard.
 - `agents/` — subagent definitions that pin the gateway routes (`ds-flash`,
   `ds-pro`, `ds-pro-max`, `glm`, `kimi`). Installed separately (see below);
   the Agent tool's `model` param only accepts Claude aliases, so third-party

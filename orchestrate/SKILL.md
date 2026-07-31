@@ -163,10 +163,25 @@ of power:
    agent cannot derive: decisions, invariants, the hard 10%.
 6. **Acceptance criteria as commands** the agent runs and pastes verbatim,
    with baseline numbers to compare against (test counts, lint state).
+7. **Write to the comms standard.** A brief that names every referent exactly
+   and marks its own confidence is the difference between a cheap model
+   executing correctly and executing something adjacent.
 
 Every brief also restates the repo's workflow rules (branch naming, commit/PR
 conventions, TDD, verification battery) and ends with the standing-orders +
 report-shape block from `references/dispatch.md` — pasted, not paraphrased.
+
+## Comms — how agents talk to each other
+
+Every agent-to-agent message obeys the comms standard. The standard adapts
+ASD-STE100 Simplified Technical English for machine readers and adds what STE
+lacks: evidence attribution, confidence marking, and referent precision. It
+binds briefs, reports, spawn prompts, teammate messages, workflow prompts,
+and task-list entries. The comms block is baked into the gateway agent
+definitions so routed agents comply by default, and pasted into briefs as
+reinforcement — a deliberate two-layer design. Read
+`references/comms.md` for the standard and its pasteable block;
+`tools/comms-lint.py` scores compliance mechanically.
 
 ## Verification — route it too
 
@@ -218,3 +233,6 @@ Named failure modes — self-check for these:
   baseline — and same-family verifier pairings on judgment work.
 - **Parallelism theater:** splitting inherently serial work to look thorough
   — and spawning a team where fan-out subagents would do.
+- **Slop-back:** accepting an unshaped, hedge-laden, or unattributed report
+  instead of holding the agent to the comms standard — the report is the
+  product, and an imprecise one silently corrupts the next dispatch.
