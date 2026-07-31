@@ -371,10 +371,18 @@ def main(argv=None, stdin=None):
                 return 1
         text = "\n".join(chunks)
     else:
+        chunks = []
         stream = stdin if stdin is not None else sys.stdin
         text = stream.read()
 
     result = lint_text(text, args.mode)
+    if args.show and len(chunks) > 1:
+        # Multi-file --show must report per-file line numbers. The aggregate
+        # score still comes from the joined text above; only the location
+        # lines switch to per-file offsets.
+        result["locations"] = [
+            loc for chunk in chunks for loc in lint_text(chunk, args.mode)["locations"]
+        ]
     if args.json:
         print(json.dumps({k: v for k, v in result.items() if k != "locations"}))
     else:

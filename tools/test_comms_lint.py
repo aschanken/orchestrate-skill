@@ -265,6 +265,42 @@ class FileInputTests(unittest.TestCase):
             self.assertEqual(code, 0)
 
 
+class MultiFileShowTests(unittest.TestCase):
+    """--show with multiple files must print per-file line numbers, while
+    the aggregate score keeps matching the concatenated input."""
+
+    A_CONTENT = "One good line.\nSecond line here.\n"
+    B_CONTENT = "I think this is wrong.\n"
+
+    def _write(self, d):
+        p1 = os.path.join(d, "a.txt")
+        p2 = os.path.join(d, "b.txt")
+        with open(p1, "w") as fh:
+            fh.write(self.A_CONTENT)
+        with open(p2, "w") as fh:
+            fh.write(self.B_CONTENT)
+        return p1, p2
+
+    def test_show_reports_per_file_line_numbers(self):
+        with tempfile.TemporaryDirectory() as d:
+            p1, p2 = self._write(d)
+            _, out = run_cli([p1, p2, "--show"])
+            vlines = [l for l in out.splitlines() if re.match(r"^\d+:", l)]
+            self.assertEqual(len(vlines), 1, vlines)
+            self.assertTrue(any(l.startswith("1:hedge_opener:") for l in vlines),
+                            "expected b.txt line 1, got: %r" % vlines)
+
+    def test_multi_file_score_matches_concatenated_input(self):
+        with tempfile.TemporaryDirectory() as d:
+            p1, p2 = self._write(d)
+            _, out = run_cli([p1, p2, "--json"])
+            data = json.loads(out)
+            expected = comms.lint_text("\n".join([self.A_CONTENT, self.B_CONTENT]))
+            self.assertEqual(data["score"], expected["score"])
+            self.assertEqual(data["total"], expected["total"])
+            self.assertEqual(data["words"], expected["words"])
+
+
 class ShowFlagTests(unittest.TestCase):
     """--show prints one line per violation with original-input line numbers."""
 
