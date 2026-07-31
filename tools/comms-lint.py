@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """comms-lint: deterministic heuristic linter for agent-to-agent messages.
 
-Checks a message against the comms standard: 10 violation categories, scored
+Checks a message against the comms standard: 7 violation categories, scored
 as violations per 100 words (2 decimals), so short and long messages compare.
 
 Fenced code blocks (``` ... ```) and 4-space-indented blocks are stripped
@@ -41,18 +41,14 @@ CATEGORY_IDS = [
     "phrasal_verb",
     "marketing_adjective",
     "hedge_opener",
-    "banned_word",
     "vague_referent",
-    "vague_quantifier",
-    "long_paragraph",
 ]
 
 # --- wordlists -----------------------------------------------------------
 # phrasal_verb, marketing_adjective and the hedge_opener core are inherited
 # from ste-lint.py; hedge_opener adds the six openers the standard names.
-# banned_word is the substitution-table list plus common inflections, so
-# inflected uses ("utilized", "leveraging") are caught along with the forms
-# the standard lists.
+# Every category maps to a numbered rule in the standard; categories the
+# ancestor scored without a backing rule are not carried over.
 
 PHRASAL_VERBS = [
     "spin up", "spin down", "reach out", "dive into", "dives into",
@@ -82,28 +78,11 @@ HEDGE_OPENERS = [
     "in my opinion",
 ]
 
-BANNED_WORDS = [
-    "utilize", "utilizes", "utilized", "utilizing",
-    "leverage", "leverages", "leveraged", "leveraging",
-    "facilitate", "facilitates", "facilitated", "facilitating",
-    "ensure", "ensures", "ensured", "ensuring",
-    "prior to", "subsequent to",
-    "regarding",
-    "obtain", "obtains", "obtained", "obtaining",
-    "demonstrate", "demonstrates", "demonstrated", "demonstrating",
-    "additionally", "furthermore", "moreover",
-]
-
 VAGUE_REFERENTS = [
     "the file", "this file", "that file", "the function", "this function",
     "the script", "the above", "as mentioned", "as noted above",
     "the aforementioned", "the former", "the latter", "earlier in this",
     "it",
-]
-
-VAGUE_QUANTIFIERS = [
-    "several", "many", "numerous", "various", "a few", "a couple",
-    "roughly", "approximately",
 ]
 
 # --- code stripping ------------------------------------------------------
@@ -232,12 +211,6 @@ REFERENT_RE = re.compile(
     r"|\b[\w.-]{2,}[A-Za-z][\w.-]*\.[A-Za-z]{2,}\b"
 )
 
-VAGUE_QUANTIFIER_RE = re.compile(
-    r"(?<![a-z])(?:" + "|".join(re.escape(p) for p in VAGUE_QUANTIFIERS) + r")(?![a-z])"
-    r"|(?<![a-z])about\s*(?=\d)",
-    re.I,
-)
-
 # --- status line (mode report, structural check) -------------------------
 
 STATUS_ANY = re.compile(r"status:", re.I)
@@ -266,22 +239,6 @@ def phrase_matches(text, phrases):
         pat = r"(?<![a-z])" + re.escape(ph) + r"(?![a-z])"
         for m in re.finditer(pat, low):
             yield ph, m.span()
-
-
-def para_spans(text):
-    """Split text into (paragraph, start_offset) on blank-line boundaries."""
-    out = []
-    last = 0
-    for m in re.finditer(r"\n\s*\n", text):
-        part = text[last:m.start()]
-        stripped = part.strip()
-        if stripped:
-            out.append((stripped, last + len(part) - len(part.lstrip())))
-        last = m.end()
-    tail = text[last:]
-    if tail.strip():
-        out.append((tail.strip(), last + len(tail) - len(tail.lstrip())))
-    return out
 
 
 def line_of(text, offset):
@@ -329,19 +286,12 @@ def lint_text(text, mode="message"):
             # "i think" is a hedge, not an opener.
             if re.match(r"(?i)" + re.escape(ph) + r"(?![a-z])", sent):
                 _record(locations, counts, stripped, start, "hedge_opener", ph)
-        for ph, (a, _b) in phrase_matches(sent, BANNED_WORDS):
-            _record(locations, counts, stripped, start + a, "banned_word", ph)
         # The rule-8 exception: a resolvable referent in the SAME sentence
         # suppresses vague_referent. Flagging "the file src/main.py:42 is
         # stale" as vague would be actively harmful, so this is per-sentence.
         if VAGUE_REFERENT_RE.search(sent) and not REFERENT_RE.search(sent):
             for m in VAGUE_REFERENT_RE.finditer(sent):
                 _record(locations, counts, stripped, start + m.start(), "vague_referent", m.group(0))
-        for m in VAGUE_QUANTIFIER_RE.finditer(sent):
-            _record(locations, counts, stripped, start + m.start(), "vague_quantifier", m.group(0))
-    for para, start in para_spans(stripped):
-        if len(split_sentences(para)) > 6:
-            _record(locations, counts, stripped, start, "long_paragraph", para)
 
     total = sum(counts.values())
     score = round(total * 100.0 / words, 2) if words else 0.0

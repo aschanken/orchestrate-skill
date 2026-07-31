@@ -34,7 +34,7 @@ def run_cli(argv, stdin_text=""):
 
 
 class CategoryFireTests(unittest.TestCase):
-    """Each of the 10 categories fires on a positive example."""
+    """Each of the 7 categories fires on a positive example."""
 
     def _count(self, text, cid):
         return comms.lint_text(text)["counts"][cid]
@@ -65,27 +65,9 @@ class CategoryFireTests(unittest.TestCase):
         self.assertGreater(
             self._count("It is important to note that the build failed.", "hedge_opener"), 0)
 
-    def test_banned_word_fires(self):
-        self.assertGreater(self._count("Please utilize the new tool.", "banned_word"), 0)
-
-    def test_banned_word_fires_on_inflection(self):
-        self.assertGreater(self._count("We leveraged the existing setup.", "banned_word"), 0)
-
     def test_vague_referent_fires(self):
         self.assertGreater(
             self._count("Check the file and tell me what you see.", "vague_referent"), 0)
-
-    def test_vague_quantifier_fires(self):
-        self.assertEqual(
-            self._count("There were several issues and about 5 fixes.", "vague_quantifier"), 2)
-
-    def test_vague_quantifier_about_requires_digit(self):
-        self.assertEqual(
-            self._count("Let me think about the plan.", "vague_quantifier"), 0)
-
-    def test_long_paragraph_fires(self):
-        self.assertGreater(
-            self._count("One. Two. Three. Four. Five. Six. Seven.", "long_paragraph"), 0)
 
 
 class PassivePredicateAdjectiveTests(unittest.TestCase):
@@ -296,19 +278,19 @@ class BareItVagueReferentTests(unittest.TestCase):
 class CodeExclusionTests(unittest.TestCase):
     def test_fenced_code_excluded_from_scoring(self):
         text = ("The parser is fast.\n"
-                "```\nutilize leverage facilitate ensure\n```\n"
+                "```\nseamless robust powerful elegant\n```\n"
                 "It is seamless.\n")
         r = comms.lint_text(text)
-        self.assertEqual(r["counts"]["banned_word"], 0)
+        # Only the "seamless" outside the fence scores; the four inside do not.
         self.assertEqual(r["counts"]["marketing_adjective"], 1)
         self.assertEqual(r["words"], 7)
 
     def test_indented_code_excluded_from_scoring(self):
         text = ("The parser is fast.\n"
-                "    utilize leverage facilitate ensure\n"
+                "    seamless robust powerful elegant\n"
                 "It is seamless.\n")
         r = comms.lint_text(text)
-        self.assertEqual(r["counts"]["banned_word"], 0)
+        self.assertEqual(r["counts"]["marketing_adjective"], 1)
         self.assertEqual(r["words"], 7)
 
 
@@ -352,7 +334,7 @@ class ExitCodeTests(unittest.TestCase):
         code, out = run_cli([], stdin_text=text)
         self.assertEqual(code, 1)
         self.assertIn("score: ", out)
-        self.assertIn("banned_word: ", out)
+        self.assertIn("hedge_opener: ", out)
 
     def test_max_score_flag_relaxes_exit_code(self):
         text = ("It is important to note that the file was utilized to "
@@ -472,8 +454,7 @@ class ShowFlagTests(unittest.TestCase):
         text = "The file was utilized.\n"
         code, out = run_cli(["--show"], stdin_text=text)
         vlines = [l for l in out.splitlines() if re.match(r"^\d+:[a-z_]+: ", l)]
-        self.assertEqual(len(vlines), 3)  # banned_word, passive_voice, vague_referent
-        self.assertTrue(any(l.startswith("1:banned_word:") for l in vlines), vlines)
+        self.assertEqual(len(vlines), 2)  # passive_voice, vague_referent
         self.assertTrue(any(l.startswith("1:passive_voice:") for l in vlines), vlines)
         self.assertTrue(any(l.startswith("1:vague_referent:") for l in vlines), vlines)
         self.assertEqual(code, 1)
@@ -504,15 +485,14 @@ class ShowFlagTests(unittest.TestCase):
         shown = [l for l in out_show.splitlines() if l.startswith("score:")]
         self.assertEqual(plain, shown)
 
-    def test_show_anchors_long_sentence_and_paragraph_start_lines(self):
+    def test_show_anchors_long_sentence_start_line(self):
         long_s = ("This sentence contains more than twenty words in total and "
                   "it keeps going well past the threshold without stopping "
                   "for a moment.")
-        text = "Short.\n" + long_s + "\n\nOne. Two. Three. Four. Five. Six. Seven.\n"
+        text = "Short.\n" + long_s + "\n"
         code, out = run_cli(["--show"], stdin_text=text)
         vlines = [l for l in out.splitlines() if re.match(r"^\d+:", l)]
         self.assertTrue(any(l.startswith("2:long_sentence:") for l in vlines), vlines)
-        self.assertTrue(any(l.startswith("4:long_paragraph:") for l in vlines), vlines)
 
     def test_show_ignored_when_json_requested(self):
         text = "The file was utilized.\n"
