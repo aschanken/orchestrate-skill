@@ -114,6 +114,24 @@ class VagueReferentExceptionTests(unittest.TestCase):
         self.assertEqual(comms.lint_text(text)["counts"]["vague_referent"], 1)
 
 
+class BareFilenameReferentTests(unittest.TestCase):
+    """A bare filename with an extension is a resolvable referent, so it
+    suppresses vague_referent in the same sentence (comms.md rule 5)."""
+
+    def test_bare_filename_with_extension_suppresses(self):
+        for text in ("The file config.py is stale.",
+                     "The file README.md is stale.",
+                     "The file SKILL.md is stale."):
+            self.assertEqual(
+                comms.lint_text(text)["counts"]["vague_referent"], 0, text
+            )
+
+    def test_vague_referent_without_filename_still_fires(self):
+        self.assertEqual(
+            comms.lint_text("The file is stale.")["counts"]["vague_referent"], 1
+        )
+
+
 class BareItVagueReferentTests(unittest.TestCase):
     """comms.md:71 names "it" explicitly: Never "the file", "it", "as
     mentioned above". A bare "it" is a vague referent; "it" inside another

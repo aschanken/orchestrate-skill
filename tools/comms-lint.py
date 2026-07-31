@@ -206,6 +206,10 @@ REFERENT_RE = re.compile(
     r"|\b[\w.-]+\.\w{1,6}:\d+\b"
     r"|`[^`]*`"
     r"|(?<!\S)/\S+"
+    # Bare filename with an extension (config.py, README.md, SKILL.md).
+    # Stem and extension both need 2+ chars with letters, so decimals
+    # ("3.14") and abbreviations ("e.g.", "Dr.") do not qualify.
+    r"|\b[\w.-]{2,}[A-Za-z][\w.-]*\.[A-Za-z]{2,}\b"
 )
 
 VAGUE_QUANTIFIER_RE = re.compile(
