@@ -12,7 +12,9 @@ Read once per session, at first dispatch.
   `effort:` to a thinking budget. Dispatch with
   `Agent(subagent_type: "ds-flash", ...)` etc. The definitions ship in this
   repo's `agents/` directory; if a dispatch fails with an unknown agent type,
-  they aren't installed — fall back to Claude tiers and note it.
+  they aren't installed — fall back to Claude tiers and note it. Passing a
+  Claude tier name (e.g. `sonnet`) as `subagent_type` fails with
+  "Agent type not found" — Claude tiers are `model` values, not agent types.
 - **Thinking control:** the per-agent `effort` frontmatter field is the
   thinking-budget knob (`low` ≈ thinking off, `max` ≈ max thinking); the
   gateway maps effort to the third-party thinking parameter. This is why
@@ -35,14 +37,14 @@ capability.
 
 | Agent type | Model / thinking | Cost class | Slot |
 |---|---|---|---|
-| `opus` | Claude Opus | premium (Anthropic budget) | correctness-critical judgment implementation |
-| `glm` | GLM 5.2 | cheap (~1/5 of premium) | default implementation workhorse |
-| `kimi` | Kimi K3 | mid (pricey output, slow) | large-context / vision / synthesis specialist |
-| `sonnet` | Claude Sonnet | mid (Anthropic budget) | judgment recon + judgment verification |
-| `ds-pro-max` | DeepSeek V4 Pro, max thinking | very cheap | budget engineer |
-| `ds-pro` | DeepSeek V4 Pro, thinking off | very cheap, fast | instruct executor + distiller |
-| `ds-flash` | DeepSeek V4 Flash, max thinking | near-free | utility workhorse |
-| `haiku` | Claude Haiku | cheap (Anthropic budget) | template-mechanical sweeps |
+| `opus` | Claude Opus | prepaid (Anthropic) | correctness-critical judgment implementation |
+| `glm` | GLM 5.2 | marginal cash | frontend/UI ceiling, long agentic runs, repo-scale refactors |
+| `kimi` | Kimi K3 | marginal cash | large-context / vision / synthesis specialist |
+| `sonnet` | Claude Sonnet | prepaid (Anthropic) | DEFAULT: recon, context building, distillation, single-concern fixes, verification |
+| `ds-pro-max` | DeepSeek V4 Pro, max thinking | marginal cash | technical authoring, engineering critique, fresh-perspective seat |
+| `ds-pro` | DeepSeek V4 Pro, thinking off | marginal cash — RESERVE | bulk instruct work under Anthropic quota pressure |
+| `ds-flash` | DeepSeek V4 Flash, max thinking | marginal cash — RESERVE | high-volume mechanical work under Anthropic quota pressure |
+| `haiku` | Claude Haiku | prepaid (Anthropic) | template-mechanical sweeps |
 
 ## Dossiers — what each route is FOR
 
@@ -82,14 +84,21 @@ refactors, debugging from logs and stack traces, perf work against
 measurements, technical verification of backend done-claims. Below
 `glm`/`opus` in breadth and taste; above everything cheaper in depth. If a
 task needs thinking AND taste, split it: taste into the brief, thinking to
-`ds-pro-max`.
+`ds-pro-max`. Named strength: authoring technical code and supplying a
+fresh, engineering-focused perspective — including critiquing a design
+authored by another model BEFORE implementation begins. A different
+lineage catches what same-family review cannot; this is its clearest case
+for a gateway dispatch over a prepaid Sonnet.
 
 **`ds-pro` — DeepSeek V4 Pro, thinking disabled.** A cheap, incredibly
 competent instruct model — crisp instruction-following with no deliberation
 latency. Route: mechanical recon (file maps, symbol traces, config
-inventories), distillation duty (see offload doctrine), doc drafts from an
-outline, format conversions, commit/PR prose, high-volume single-concern
-sweeps, first-draft duty. The workhorse for "do exactly this, quickly".
+inventories), distillation duty, doc drafts from an outline, format
+conversions, commit/PR prose, high-volume single-concern sweeps, first-draft
+duty. The workhorse for "do exactly this, quickly". RESERVE under the
+corrected economics (see spend doctrine): this default-recon and
+distillation duty now belongs to prepaid Sonnet; dispatch `ds-pro` only when
+Anthropic quota is under pressure.
 
 **`ds-flash` — DeepSeek V4 Flash, max thinking.** Near-free and
 surprisingly competent — but ONLY under granular, well-formulated
@@ -102,7 +111,9 @@ deprecation sweeps). Hard precondition: errors must be mechanically
 detectable (tests/linters/type-checks), because at this price the loop is
 dispatch → check → amended retry, not careful first passes. Never: ambiguous
 scope, judgment-surfaced errors, anything where the brief says "use your
-judgment".
+judgment". RESERVE under the corrected economics (see spend doctrine): its
+mechanical-churn duty defaults to prepaid Sonnet; dispatch `ds-flash` only
+when Anthropic quota is under pressure.
 
 **`sonnet` / `haiku` / `opus` — where Anthropic tiers still win.**
 `sonnet`: recon that requires judgment about what MATTERS (architecture
@@ -112,42 +123,59 @@ example where speed beats everything. `opus`: the escalation tier — subtle
 multi-file correctness, security-sensitive diffs, UI fidelity where GLM's
 attempt missed, arbitration-grade second opinions.
 
-## Offload doctrine — spend Anthropic tokens on judgment only
+## Spend doctrine — three currencies
 
-The gateway pool is cheap enough that the question inverts: not "is this
-task cheap enough to route down?" but "what, exactly, justifies routing this
-UP?" Anthropic session/weekly budget is reserved for judgment; everything
-retryable defaults to the gateway. Patterns:
+Three budgets, not one: **prepaid Anthropic capacity** (Sonnet/Opus draw on
+session and weekly limits already paid for — unspent capacity is wasted
+capacity, and the marginal cost of using Sonnet to read files or build
+context is zero); **the Fable weekly allowance** (the genuinely scarce
+Anthropic resource, conserved for the lead/judgment seat); **marginal cash**
+(DeepSeek, GLM, and Kimi bill real dollars per token through the gateway).
 
-1. **Default-down, verify, escalate.** When errors are mechanically
-   detectable, start one tier below instinct. A failed `ds-flash` attempt
-   plus an amended retry still costs a fraction of one premium first-pass —
-   the escalation ladder is the safety net, so use it as the plan, not the
-   exception.
-2. **Draft-then-polish.** `ds-pro`/`ds-flash` writes the first draft
-   (code, doc, test suite); a higher tier reviews and patches the DELTA.
-   Reviewing a 90%-right draft spends a fraction of the tokens that
-   authoring from scratch does — the premium model's output is a diff, not
-   a file.
-3. **Speculative N-way drafts.** At near-free prices, dispatch 2–3 parallel
-   `ds-flash`/`ds-pro` attempts with differently-angled briefs on a hard-ish
-   task; a cheap judge (or the acceptance battery) picks the survivor.
-   Escalate to premium only if all fail. Sampling beats escalating.
-4. **The distillation shield.** NOTHING bulky enters the main context raw.
-   Oversized reads, verbose logs, giant diffs route through `ds-pro` (or
-   `kimi` when >`ds-pro`-practical) with a report-shape mandate; the main
-   agent reads the digest. This converts main-context input tokens — the
-   most expensive tokens in the session — into near-free gateway tokens.
-5. **Cheap verifier panels for mechanical claims.** Three `ds-flash`
-   refuters with different attack angles cost less than one Sonnet verifier
-   and are harder to rubber-stamp past. Reserve Sonnet/`kimi` verification
-   for judgment claims (design fidelity, UX, security posture).
-6. **Battery-and-churn duty.** Test runs, lint sweeps, fixture regeneration,
-   rebase mechanics, changelog assembly: `ds-flash`, always, no deliberation.
-7. **Brief-prep pre-digestion.** `ds-pro` assembles the RAW MATERIAL for
+**Commodity work goes to prepaid capacity. Cash buys differentiation, never
+volume.** The test for every gateway dispatch: what does this route provide
+that a prepaid Sonnet does not? Valid answers: a different engineering
+lineage that produces different solutions and different failure modes
+(`ds-pro-max`); a frontend/UI ceiling above the prepaid tier (`glm`); 1M
+context or vision (`kimi`); uncorrelated blind spots in an adversarial
+panel; throughput when Anthropic rate limits are the binding constraint.
+Invalid answer: "it is cheaper" — cheaper than free is not a thing.
+
+**State-dependent clause.** When Anthropic session or weekly limits ARE
+under pressure, the old offload logic reactivates: gateway models absorb
+volume until pressure eases. This doctrine is conditional on quota state,
+not absolute — check quota state before assuming the default holds.
+
+Patterns that remain valid, re-anchored to the corrected economics:
+
+1. **Draft-then-polish.** A lower tier writes the first draft (code, doc,
+   test suite); a higher tier reviews and patches the DELTA. Reviewing a
+   90%-right draft spends a fraction of the tokens that authoring from
+   scratch does — the reviewing model's output is a diff, not a file.
+2. **The distillation shield.** NOTHING bulky enters the main context raw.
+   Oversized reads, verbose logs, giant diffs route through Sonnet (prepaid,
+   the new default) with a report-shape mandate — `kimi` when the material
+   exceeds Sonnet-practical (giant logs, whole-repo digests). This converts
+   main-context input tokens — the most expensive tokens in the session —
+   into tokens already paid for.
+3. **Cross-family sampling for diversity.** Dispatch 2–3 parallel attempts
+   on a hard-ish task, each from a DIFFERENT model family, with
+   differently-angled briefs; a verifier (or the acceptance battery) picks
+   the survivor. The point is diversity of failure mode, not price — three
+   same-family attempts buy nothing a single attempt didn't already risk.
+4. **Mixed-family verifier panels.** Refuters from a different family than
+   the implementer, and from each other, catch what same-family review
+   rubber-stamps past. Cross-family disagreement is the high-signal event;
+   agreement ACROSS families is far stronger evidence than agreement within
+   one.
+5. **Battery-and-churn duty.** Test runs, lint sweeps, fixture regeneration,
+   rebase mechanics, changelog assembly: Sonnet by default (prepaid, no
+   deliberation needed); `ds-flash` only when Anthropic quota is under
+   pressure.
+6. **Brief-prep pre-digestion.** Sonnet assembles the RAW MATERIAL for
    briefs — candidate fix-point tables, current-state inventories — which
-   the main agent then curates and decides over. The lead spends judgment,
-   not transcription.
+   the main agent then curates and decides over; `ds-pro` only when quota is
+   under pressure. The lead spends judgment, not transcription.
 
 The quality floor is non-negotiable: offloading rides on verification, so a
 cheap implementation is only "done" when its acceptance battery and (for

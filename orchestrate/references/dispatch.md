@@ -2,10 +2,11 @@
 
 Read once per session, at first dispatch. The skeleton is a starting shape,
 not a form to fill — drop sections that don't apply, never pad. The
-standing-orders block is pasted VERBATIM at the end of every dispatch prompt.
+standing-orders block is pasted VERBATIM at the end of every dispatch prompt,
+and the comms block is pasted alongside it in every dispatch.
 
 The same skeleton serves subagent briefs and teammate spawn prompts alike —
-teammates additionally get the team appendix from `teams.md`. Model choice
+teammates also get the team appendix from `teams.md`. Model choice
 per brief comes from `routing.md`; note in the brief's Context line which
 route it was written for, since brief granularity is what makes cheap routes
 safe (`ds-flash` needs the fix-point map and worked example filled; `opus`
@@ -49,6 +50,7 @@ the verification battery, baseline numbers: test counts, lint state.>
 - [ ] ...
 
 <PASTE STANDING-ORDERS BLOCK HERE>
+<PASTE COMMS BLOCK HERE>
 ```
 
 ## Standing-orders block (paste verbatim)
@@ -80,6 +82,42 @@ the verification battery, baseline numbers: test counts, lint state.>
 No raw diffs, no file dumps, no restating the brief back.
 ```
 
+## Comms block (paste verbatim)
+
+```
+## Comms standard (governs every message you send)
+
+Write for a machine reader that will act on your words with no chance to ask
+you what you meant.
+
+PRECISION
+1. One name for one thing. Reuse the exact identifier the brief uses. Never
+   introduce a synonym for something already named.
+2. Name the actor. Write "the parser reads the file", not "the file is read".
+3. One instruction per sentence, 20 words maximum. Put the condition first,
+   then the command.
+4. Use plain verbs. Write "analyze the log", not "perform an analysis of the
+   log". No phrasal verbs: spin up, circle back, dive into, reach out.
+5. Make every referent resolvable: a path, a file:line, a symbol, a command, a
+   task id, or an agent name. Never "the file", "it", "as mentioned above".
+
+EVIDENCE
+6. Attach an origin to every claim: verbatim command output, a file:line, or
+   the word "inferred".
+7. Mark confidence with CONFIRMED, UNCERTAIN, or REFUTED. Never round
+   UNCERTAIN up to CONFIRMED.
+8. Report unknowns as unknowns. A hidden gap costs the reader more than a
+   stated one.
+
+SIGNAL
+9. Lead with the conclusion. Your reader may stop after the first line.
+10. Delete marketing adjectives (seamless, robust, powerful, elegant,
+    best-in-class) and hedge openers ("it is important to note", "it is worth
+    noting"). They carry no information.
+11. Never restate the brief back. Report only what you found and what changed.
+12. Respect the length cap the brief gives you.
+```
+
 ## Verifier brief (Tier 1) — shape
 
 Dispatch a DIFFERENT agent than the implementer. Core instruction:
@@ -91,5 +129,6 @@ actually pass, edge cases from the brief's table left unhandled, scope-fence
 violations, tests that assert less than they appear to. Run the battery
 yourself; do not trust the implementer's pasted output. Verdict: CONFIRMED or
 REFUTED with evidence (verbatim output, file:line). If uncertain, say
-uncertain — do not round up to confirmed.
+uncertain — do not round up to confirmed. The verdict must be marked
+CONFIRMED, REFUTED, or UNCERTAIN, and UNCERTAIN is never rounded up.
 ```
