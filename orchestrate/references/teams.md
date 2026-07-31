@@ -72,10 +72,12 @@ Spawn mechanics:
 - 3–5 teammates; 5–6 tasks per teammate. Three focused beat five scattered.
 - Disjoint file ownership spelled out in EVERY spawn prompt, both ways.
 
-Routing inside a team follows `routing.md` unchanged: `glm` implementers,
-`kimi` for the vision/large-context seat, `ds-pro-max` backend engineers,
-Anthropic tiers where judgment demands. A mixed-family panel is a feature
-for review teams — uncorrelated blind spots argue better.
+Routing inside a team follows `routing.md`, subject to the composition
+constraint below: the economical default is Anthropic-majority with at
+most one cross-family seat; `glm`, `kimi`, and `ds-pro-max` seats are
+added only when the cash-billed spend is justified per that constraint.
+A mixed-family panel is a feature for review teams — uncorrelated blind
+spots argue better.
 
 ## Cross-model team composition
 
