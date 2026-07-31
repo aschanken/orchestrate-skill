@@ -90,9 +90,12 @@ SIGNAL
 ## Where it binds
 
 **Subagent briefs.** Briefs are instructions from orchestrator to subagent.
-The comms block appears in the orchestrate SKILL.md as a standing order —
-subagents receive it automatically, so do not paste it into individual briefs.
-Write the brief body to the standard.
+This is a two-layer design: the comms block is baked into the gateway agent
+definitions in `agents/*.md`, so agents routed through them comply by
+default, AND the block is pasted into every brief as reinforcement. The
+paste is not redundant — a Claude-tier subagent dispatched via `model:` on
+a generic agent type has no `agents/*.md` definition, so the pasted block
+is its only source of the standard. Write the brief body to the standard.
 
 **Subagent reports.** Every subagent final message is a report. The comms
 standard governs its form: open with the conclusion, state confidence, cite
