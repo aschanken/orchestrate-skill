@@ -92,8 +92,9 @@ reports are held to a required shape with no raw diffs or file dumps.
   Technical English for machine readers and adds what STE lacks: evidence
   attribution, confidence marking, and referent precision. It binds every
   channel (briefs, reports, spawn prompts, teammate messages, workflow
-  prompts, task-list entries) and is mechanically scored by
-  `tools/comms-lint.py`.
+  prompts, task-list entries); `tools/comms-lint.py` partially scores the
+  rules a regex can check, and several rules stay judgment calls no linter
+  settles.
 
 ## Layout
 
