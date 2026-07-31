@@ -34,7 +34,7 @@ def run_cli(argv, stdin_text=""):
 
 
 class CategoryFireTests(unittest.TestCase):
-    """Each of the 10 categories fires on a positive example."""
+    """Each of the 7 categories fires on a positive example."""
 
     def _count(self, text, cid):
         return comms.lint_text(text)["counts"][cid]
@@ -65,27 +65,140 @@ class CategoryFireTests(unittest.TestCase):
         self.assertGreater(
             self._count("It is important to note that the build failed.", "hedge_opener"), 0)
 
-    def test_banned_word_fires(self):
-        self.assertGreater(self._count("Please utilize the new tool.", "banned_word"), 0)
-
-    def test_banned_word_fires_on_inflection(self):
-        self.assertGreater(self._count("We leveraged the existing setup.", "banned_word"), 0)
-
     def test_vague_referent_fires(self):
         self.assertGreater(
             self._count("Check the file and tell me what you see.", "vague_referent"), 0)
 
-    def test_vague_quantifier_fires(self):
-        self.assertEqual(
-            self._count("There were several issues and about 5 fixes.", "vague_quantifier"), 2)
 
-    def test_vague_quantifier_about_requires_digit(self):
-        self.assertEqual(
-            self._count("Let me think about the plan.", "vague_quantifier"), 0)
+class PassivePredicateAdjectiveTests(unittest.TestCase):
+    """comms.md:64 ("Name the actor") targets passive voice: be-verb + past
+    participle. A be-verb followed by a determiner and an -ed adjective is a
+    predicate adjective phrase, not passive voice."""
 
-    def test_long_paragraph_fires(self):
-        self.assertGreater(
-            self._count("One. Two. Three. Four. Five. Six. Seven.", "long_paragraph"), 0)
+    def _count(self, text):
+        return comms.lint_text(text)["counts"]["passive_voice"]
+
+    def test_predicate_adjective_is_not_passive(self):
+        for text in ("This is a complicated problem.",
+                     "That is an advanced setting.",
+                     "She is the interested party."):
+            self.assertEqual(self._count(text), 0, text)
+
+    def test_real_passive_still_fires(self):
+        self.assertEqual(self._count("The file was written by the parser."), 1)
+
+    def test_real_passive_without_by_agent_still_fires(self):
+        self.assertEqual(self._count("The file was utilized."), 1)
+
+    def test_adverb_between_be_verb_and_participle_still_fires(self):
+        for text in ("The file was quickly written by the parser.",
+                     "The file was not written by the parser.",
+                     "The file is being written by the parser."):
+            self.assertEqual(self._count(text), 1, text)
+
+
+class NominalizationGerundTests(unittest.TestCase):
+    """comms.md:65 ("Use plain verbs") targets light verb + noun, such as
+    "perform an analysis". An -ing word after a light verb is only a noun
+    when a determiner marks it or when it ends the phrase; otherwise it is an
+    adjective modifying the next noun."""
+
+    def _count(self, text):
+        return comms.lint_text(text)["counts"]["nominalization"]
+
+    def test_adjectival_ing_is_not_a_nominalization(self):
+        for text in ("Do interesting work today please now.",
+                     "Provide interesting examples now.",
+                     "Make outstanding progress today."):
+            self.assertEqual(self._count(text), 0, text)
+
+    def test_ing_nominalization_with_determiner_still_fires(self):
+        self.assertEqual(self._count("Do the reporting now."), 1)
+
+    def test_ing_nominalization_at_phrase_end_still_fires(self):
+        for text in ("We will perform testing.",
+                     "Provide training to the team.",
+                     "Conduct monitoring of the queue."):
+            self.assertEqual(self._count(text), 1, text)
+
+    def test_suffix_nominalizations_still_fire(self):
+        for text in ("We will perform an analysis of the results.",
+                     "Provide confirmation now.",
+                     "Make an assessment today."):
+            self.assertEqual(self._count(text), 1, text)
+
+
+class CarryOutPhrasalVerbTests(unittest.TestCase):
+    """comms.md:67 governs phrasal verbs. "carry out" is a phrasal verb, not
+    a nominalization, and it must score in exactly one category."""
+
+    def test_carry_out_scores_phrasal_verb_only(self):
+        counts = comms.lint_text("We will carry out the testing.")["counts"]
+        self.assertEqual(counts["phrasal_verb"], 1)
+        self.assertEqual(counts["nominalization"], 0)
+
+    def test_carry_out_is_not_double_counted(self):
+        counts = comms.lint_text("Please carry out the deployment.")["counts"]
+        self.assertEqual(counts["phrasal_verb"] + counts["nominalization"], 1)
+
+    def test_other_light_verb_nominalizations_still_fire(self):
+        self.assertEqual(
+            comms.lint_text("We will perform an analysis.")["counts"]["nominalization"], 1)
+
+
+class BackReferencePhraseOwnershipTests(unittest.TestCase):
+    """comms.md:71 lists "as mentioned above" under rule 5 (resolvable
+    referents). comms.md:83-85 names the hedge openers and does not include
+    it. So vague_referent owns the phrase and hedge_opener does not."""
+
+    def test_as_mentioned_scores_referent_only(self):
+        for text in ("As mentioned, the build failed.",
+                     "As noted above, the build failed."):
+            counts = comms.lint_text(text)["counts"]
+            self.assertEqual(counts["vague_referent"], 1, text)
+            self.assertEqual(counts["hedge_opener"], 0, text)
+
+    def test_as_mentioned_is_not_double_counted(self):
+        counts = comms.lint_text("As mentioned, the build failed.")["counts"]
+        self.assertEqual(counts["vague_referent"] + counts["hedge_opener"], 1)
+
+    def test_resolvable_referent_suppresses_the_phrase(self):
+        text = "As mentioned in src/main.py:42, the build failed."
+        self.assertEqual(comms.lint_text(text)["counts"]["vague_referent"], 0)
+
+    def test_real_hedge_openers_still_fire(self):
+        for text in ("It is important to note that the build failed.",
+                     "It is worth noting that the build failed.",
+                     "I think this is wrong."):
+            self.assertEqual(
+                comms.lint_text(text)["counts"]["hedge_opener"], 1, text)
+
+
+class MarketingAdjectiveScopeTests(unittest.TestCase):
+    """comms.md:83-84 lists what rule 10 deletes: "seamless, robust,
+    powerful, elegant, best-in-class". "unlock" is a verb with ordinary
+    technical senses, so it is not scored."""
+
+    def _count(self, text):
+        return comms.lint_text(text)["counts"]["marketing_adjective"]
+
+    def test_technical_unlock_is_not_marketing(self):
+        for text in ("Press the unlock button now.",
+                     "Call unlock on the mutex.",
+                     "The unlock code is wrong."):
+            self.assertEqual(self._count(text), 0, text)
+
+    def test_listed_marketing_adjectives_still_fire(self):
+        for text in ("This is a seamless integration.",
+                     "The parser is robust.",
+                     "We shipped a best-in-class result."):
+            self.assertEqual(self._count(text), 1, text)
+
+    def test_marketing_verbs_still_fire(self):
+        for text in ("This will unleash your team.",
+                     "This will empower your team.",
+                     "This will supercharge your team."):
+            self.assertEqual(self._count(text), 1, text)
 
 
 class VagueReferentExceptionTests(unittest.TestCase):
@@ -165,19 +278,19 @@ class BareItVagueReferentTests(unittest.TestCase):
 class CodeExclusionTests(unittest.TestCase):
     def test_fenced_code_excluded_from_scoring(self):
         text = ("The parser is fast.\n"
-                "```\nutilize leverage facilitate ensure\n```\n"
+                "```\nseamless robust powerful elegant\n```\n"
                 "It is seamless.\n")
         r = comms.lint_text(text)
-        self.assertEqual(r["counts"]["banned_word"], 0)
+        # Only the "seamless" outside the fence scores; the four inside do not.
         self.assertEqual(r["counts"]["marketing_adjective"], 1)
         self.assertEqual(r["words"], 7)
 
     def test_indented_code_excluded_from_scoring(self):
         text = ("The parser is fast.\n"
-                "    utilize leverage facilitate ensure\n"
+                "    seamless robust powerful elegant\n"
                 "It is seamless.\n")
         r = comms.lint_text(text)
-        self.assertEqual(r["counts"]["banned_word"], 0)
+        self.assertEqual(r["counts"]["marketing_adjective"], 1)
         self.assertEqual(r["words"], 7)
 
 
@@ -221,7 +334,7 @@ class ExitCodeTests(unittest.TestCase):
         code, out = run_cli([], stdin_text=text)
         self.assertEqual(code, 1)
         self.assertIn("score: ", out)
-        self.assertIn("banned_word: ", out)
+        self.assertIn("hedge_opener: ", out)
 
     def test_max_score_flag_relaxes_exit_code(self):
         text = ("It is important to note that the file was utilized to "
@@ -341,8 +454,7 @@ class ShowFlagTests(unittest.TestCase):
         text = "The file was utilized.\n"
         code, out = run_cli(["--show"], stdin_text=text)
         vlines = [l for l in out.splitlines() if re.match(r"^\d+:[a-z_]+: ", l)]
-        self.assertEqual(len(vlines), 3)  # banned_word, passive_voice, vague_referent
-        self.assertTrue(any(l.startswith("1:banned_word:") for l in vlines), vlines)
+        self.assertEqual(len(vlines), 2)  # passive_voice, vague_referent
         self.assertTrue(any(l.startswith("1:passive_voice:") for l in vlines), vlines)
         self.assertTrue(any(l.startswith("1:vague_referent:") for l in vlines), vlines)
         self.assertEqual(code, 1)
@@ -373,15 +485,14 @@ class ShowFlagTests(unittest.TestCase):
         shown = [l for l in out_show.splitlines() if l.startswith("score:")]
         self.assertEqual(plain, shown)
 
-    def test_show_anchors_long_sentence_and_paragraph_start_lines(self):
+    def test_show_anchors_long_sentence_start_line(self):
         long_s = ("This sentence contains more than twenty words in total and "
                   "it keeps going well past the threshold without stopping "
                   "for a moment.")
-        text = "Short.\n" + long_s + "\n\nOne. Two. Three. Four. Five. Six. Seven.\n"
+        text = "Short.\n" + long_s + "\n"
         code, out = run_cli(["--show"], stdin_text=text)
         vlines = [l for l in out.splitlines() if re.match(r"^\d+:", l)]
         self.assertTrue(any(l.startswith("2:long_sentence:") for l in vlines), vlines)
-        self.assertTrue(any(l.startswith("4:long_paragraph:") for l in vlines), vlines)
 
     def test_show_ignored_when_json_requested(self):
         text = "The file was utilized.\n"
