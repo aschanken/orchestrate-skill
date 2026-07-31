@@ -172,8 +172,8 @@ two hops becomes an uncheckable assertion by the third.
 
 Require plan approval for every implementation teammate ("require plan
 approval before changes"); research/review teammates skip it. The lead
-approves autonomously against pre-set criteria — put them in the spawn
-prompt era decision, e.g.: plan must name files touched (inside ownership),
+approves autonomously against pre-set criteria — pre-set them in the spawn
+prompt, e.g.: plan must name files touched (inside ownership),
 tests to be added, and the verification battery; reject plans that expand
 scope or touch another teammate's files, with one-line feedback.
 
