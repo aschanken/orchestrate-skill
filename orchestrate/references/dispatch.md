@@ -40,6 +40,21 @@ This section is what makes Haiku routing safe.>
 - Files owned by sibling agents (do not touch): <paths>
 - Out of scope entirely: <paths / concerns>
 - Known pre-existing flakes — do not chase: <names>
+- Git: <who owns commits. When the orchestrator owns them, write "read-only
+  git only (status, log, diff); no add, commit, branch, or checkout" — a bare
+  "no git commands" fence contradicts any acceptance criterion that asks the
+  agent to run `git status`, and a careful agent will stop to report it.>
+
+## Worked example (for mechanical work)
+<One input→output case done fully. This is what makes `ds-flash` routing safe:
+it converts a rule the agent must interpret into a pattern it can match.>
+
+## Self-contradiction check (author's pass before dispatch)
+<Re-read the brief as the agent will: do any two instructions conflict? The
+common pairs are a scope fence versus an acceptance command, and a
+"reproduce verbatim" payload versus a `grep` criterion the payload's own line
+wrapping defeats. A well-briefed agent stops and reports the fork, which
+costs a full dispatch cycle — cheaper to catch here.>
 
 ## Workflow rules for this repo
 <Branch naming, commit convention (test in same commit), PR flow, how to run

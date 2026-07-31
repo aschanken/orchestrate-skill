@@ -81,33 +81,65 @@ for review teams — uncorrelated blind spots argue better.
 
 Governing rule: **diversity where judgment is contested, uniformity where
 throughput matters.** Mix families for parallel thinking, never for
-parallel typing.
+parallel typing. Every cash-billed teammate seat (`glm`, `kimi`, `ds-pro`,
+`ds-pro-max`) bills real money per teammate, unlike a Sonnet or Opus
+teammate drawing on already-paid subscription capacity — so a mixed-family
+team is justified only when contested judgment is the point, not as a
+default composition. The economical default is Anthropic teammates with AT
+MOST ONE cross-family seat supplying the adversarial voice, not a full panel
+of cash-billed teammates. Where a pattern below names several cash-billed
+seats, the cheaper Anthropic-majority variant is noted alongside it.
 
 - **Design critique pair.** The lead or `opus` authors the design; a
   `ds-pro-max` teammate attacks the engineering (not the taste) BEFORE
   implementation starts. A different lineage catches what same-family
-  review cannot.
+  review cannot. This pair is already the economical shape: one cash-billed
+  seat, one subscription seat.
 - **Mixed-family review panel.** `sonnet` on the security lens, `ds-pro-max`
   on the correctness/algorithmic lens, `glm` on the integration/frontend
   lens — all reviewing the same diff and debating. Cross-family
   disagreement is the high-signal event; agreement ACROSS families is far
-  stronger evidence than agreement within one.
+  stronger evidence than agreement within one. Cheaper variant: `sonnet` and
+  `opus` cover two lenses, one cash-billed teammate (`ds-pro-max` or `glm`,
+  whichever lens most needs an uncorrelated lineage) supplies the single
+  adversarial voice.
 - **Implement / refute pair.** `glm` implements the UI; `kimi` refutes it
-  from screenshots. Uncorrelated blind spots.
+  from screenshots. Uncorrelated blind spots. Both seats are cash-billed
+  here because vision-in-the-loop refutation is `kimi`'s distinguishing
+  capability — this pattern is justified specifically when that capability
+  is the point, not a template for other pairs.
 - **Competing-hypothesis debugging with family diversity.** One hypothesis
   per teammate, each on a DIFFERENT family, so shared training priors
   cannot anchor the whole team on the same wrong theory. This is the
-  strongest available use of a mixed team.
+  strongest available use of a mixed team. Cheaper variant when the bug is
+  routine: Sonnet and Opus teammates carry most hypotheses, one cash-billed
+  teammate covers the theory most likely to hit a same-family blind spot.
 - **Context-tiered team.** `kimi` holds the whole-repo picture at 1M
   context and acts as the consistency oracle; `sonnet` teammates work
   focused slices; `kimi` cross-checks each slice against the global view.
+  Already the economical shape: one cash-billed seat for the capability
+  (1M context) subscription tiers don't have.
 - **Second-opinion escalation inside a team.** When a teammate stalls
   twice, the lead spawns a different-family teammate on the SAME task with
   the failed attempt attached, briefed to approach it differently rather
-  than to continue it.
+  than to continue it. Try an Anthropic-tier escalation (e.g. `sonnet` to
+  `opus`) first when the stall looks like a capability gap rather than a
+  training-prior anchor; reach for a cash-billed family switch when the
+  stall looks like the same blind spot twice.
 
-Mixed-family teams cost marginal cash, so they are for contested judgment,
-not for routine parallel work.
+Mixed-family teams bill real cash per cash-billed teammate, so they are for
+contested judgment, not for routine parallel work.
+
+### Why ds-flash is a poor teammate
+
+A teammate operates with autonomy: it claims tasks from a shared list,
+negotiates with peers, and decides when its own work is done. `ds-flash`
+requires its work fully specified before it starts and supplies no judgment
+about scope — the opposite profile. Put it in a team seat and it either
+stalls on ambiguous task claims or claims tasks it cannot actually complete
+without a judgment call. `ds-flash` is an excellent fan-out subagent under
+an exact brief, and a poor teammate wherever self-direction is the
+requirement. Rule: give `ds-flash` dispatched briefs, not team seats.
 
 ## Task list discipline
 
