@@ -31,33 +31,37 @@ Read once per session, at first dispatch.
 
 ## The routing table
 
-Ordered top (most capable, most expensive) to bottom. "Session model" =
-whatever runs this session; routing to your own tier buys parallelism, not
-capability.
+Ordered by budget tier: the two DEFAULT routes first (subscription capacity
+for judgment, `ds-flash` for fully-specifiable execution), then the
+DELIBERATE SPEND routes bought only when they earn their cash cost.
+"Session model" = whatever runs this session; routing to your own tier buys
+parallelism, not capability.
 
 | Agent type | Model / thinking | Cost class | Slot |
 |---|---|---|---|
-| `opus` | Claude Opus | prepaid (Anthropic) | correctness-critical judgment implementation |
-| `glm` | GLM 5.2 | marginal cash | frontend/UI ceiling, long agentic runs, repo-scale refactors |
-| `kimi` | Kimi K3 | marginal cash | large-context / vision / synthesis specialist |
-| `sonnet` | Claude Sonnet | prepaid (Anthropic) | DEFAULT: recon, context building, distillation, single-concern fixes, verification |
-| `ds-pro-max` | DeepSeek V4 Pro, max thinking | marginal cash | technical authoring, engineering critique, fresh-perspective seat |
-| `ds-pro` | DeepSeek V4 Pro, thinking off | marginal cash — RESERVE | bulk instruct work under Anthropic quota pressure |
-| `ds-flash` | DeepSeek V4 Flash, max thinking | marginal cash — RESERVE | high-volume mechanical work under Anthropic quota pressure |
-| `haiku` | Claude Haiku | prepaid (Anthropic) | template-mechanical sweeps |
+| `sonnet` | Claude Sonnet | expendable (Anthropic subscription) | DEFAULT: judgment-bearing work — recon, context building, distillation, single-concern fixes, verification |
+| `ds-flash` | DeepSeek V4 Flash, max thinking | pennies (cash) | DEFAULT for fully-specifiable work: high-volume mechanical work under a granular, exact brief |
+| `opus` | Claude Opus | expendable (Anthropic subscription) | correctness-critical judgment implementation |
+| `haiku` | Claude Haiku | expendable (Anthropic subscription) | template-mechanical sweeps |
+| `glm` | GLM 5.2 | real cash — DELIBERATE SPEND | frontend/UI ceiling, long agentic runs, repo-scale refactors |
+| `kimi` | Kimi K3 | real cash — DELIBERATE SPEND | large-context / vision / synthesis specialist |
+| `ds-pro-max` | DeepSeek V4 Pro, max thinking | real cash — DELIBERATE SPEND | technical authoring, engineering critique, fresh-perspective seat |
+| `ds-pro` | DeepSeek V4 Pro, thinking off | real cash — DELIBERATE SPEND | bulk instruct work when subscription capacity is exhausted |
 
 ## Dossiers — what each route is FOR
 
 **`glm` — GLM 5.2.** The strongest open coding/agentic model; frontend
 output ranks at the very top of human-preference arenas, terminal-driving
-near Opus level, built for long-running agentic jobs, 1M context. The
-default substitute for the Opus slot on implementation. Route: frontend/UI
-builds (its standout), multi-file feature implementation, terminal-heavy
-work (build/CI wrangling, environment surgery), repo-scale refactors, any
-long agentic run where premium tokens would bleed. Pair its judgment-heavy
+near Opus level, built for long-running agentic jobs, 1M context. A capable
+substitute for the Opus slot on implementation. Route: frontend/UI builds
+(its standout), multi-file feature implementation, terminal-heavy work
+(build/CI wrangling, environment surgery), repo-scale refactors, any long
+agentic run where the deliverable needs its ceiling. Pair its judgment-heavy
 output with a cross-family verifier. Keep `opus` for: safety-adjacent
 changes, subtle concurrency/API-design taste, and work where a review cycle
-costs more than the model delta.
+costs more than the model delta. Deliberate spend: pay for `glm` when the
+task genuinely needs its frontend/UI ceiling or its long-agentic-run
+throughput — not as a default implementer; Sonnet is the default now.
 
 **`kimi` — Kimi K3.** 1M context with huge output ceiling, native vision,
 frontier-level agentic knowledge work, strong long-horizon repo navigation.
@@ -68,7 +72,9 @@ cap. Route: the large-context delegate slot (whole-repo digests, giant logs,
 cross-cutting audits that fit nowhere else), screenshot-in-the-loop UI
 verification (it reads images — the only gateway route that does),
 long-horizon multi-file campaigns, research/knowledge-work synthesis.
-Prefer it as analyst/verifier over bulk implementer.
+Prefer it as analyst/verifier over bulk implementer. Deliberate spend: pay
+for `kimi` when 1M context, native vision, or a synthesis/verdict
+deliverable is the actual requirement — not as a default recon route.
 
 **GLM vs Kimi — the overlap.** Both excel at frontend engineering and
 long-horizon agentic coding over big repos. Tie-breakers: building → `glm`
@@ -88,32 +94,40 @@ task needs thinking AND taste, split it: taste into the brief, thinking to
 fresh, engineering-focused perspective — including critiquing a design
 authored by another model BEFORE implementation begins. A different
 lineage catches what same-family review cannot; this is its clearest case
-for a gateway dispatch over a prepaid Sonnet.
+for a gateway dispatch over Sonnet. Deliberate spend: pay for `ds-pro-max`
+when a different engineering lineage or thinking-heavy technical critique is
+the actual requirement — not for routine backend work Sonnet can do.
 
 **`ds-pro` — DeepSeek V4 Pro, thinking disabled.** A cheap, incredibly
 competent instruct model — crisp instruction-following with no deliberation
 latency. Route: mechanical recon (file maps, symbol traces, config
 inventories), distillation duty, doc drafts from an outline, format
 conversions, commit/PR prose, high-volume single-concern sweeps, first-draft
-duty. The workhorse for "do exactly this, quickly". RESERVE under the
-corrected economics (see spend doctrine): this default-recon and
-distillation duty now belongs to prepaid Sonnet; dispatch `ds-pro` only when
-Anthropic quota is under pressure.
+duty. The workhorse for "do exactly this, quickly" when the work also needs
+some instruction-following judgment `ds-flash` shouldn't be trusted with.
+Deliberate spend under the corrected economics (see spend doctrine): this
+recon and distillation duty now belongs to Sonnet by default; dispatch
+`ds-pro` when subscription capacity is exhausted, not as a routine default.
 
-**`ds-flash` — DeepSeek V4 Flash, max thinking.** Near-free and
-surprisingly competent — but ONLY under granular, well-formulated
-instructions. The skill's brief discipline is exactly what makes this route
-safe: fix-point map, worked example, runnable acceptance criteria, scope
-fences. Route: backend/utility lifting — glue code, scripts, test
-scaffolding and fixture generation, data munging, log parsing, bulk
+**`ds-flash` — DeepSeek V4 Flash, max thinking.** Promoted to a DEFAULT
+workhorse under the corrected economics (see spend doctrine): near-free and
+surprisingly competent, it is the one cash-billed route worth paying for
+because it buys enormous throughput for pennies. That promotion has a
+precondition, not a suspension, of the old caution — it holds ONLY under
+granular, well-formulated instructions. The skill's brief discipline is
+exactly what makes this route safe, and is now the precondition for
+defaulting to it: fix-point map, worked example, runnable acceptance
+criteria, scope fences. Route: backend/utility lifting — glue code, scripts,
+test scaffolding and fixture generation, data munging, log parsing, bulk
 semi-mechanical edits one notch above template work, churn (lint fixes,
 deprecation sweeps). Hard precondition: errors must be mechanically
 detectable (tests/linters/type-checks), because at this price the loop is
-dispatch → check → amended retry, not careful first passes. Never: ambiguous
-scope, judgment-surfaced errors, anything where the brief says "use your
-judgment". RESERVE under the corrected economics (see spend doctrine): its
-mechanical-churn duty defaults to prepaid Sonnet; dispatch `ds-flash` only
-when Anthropic quota is under pressure.
+dispatch → check → amended retry, not careful first passes. Hard limit,
+absolute, unchanged by the promotion: it supplies no creativity and no
+taste. Never: ambiguous scope, judgment-surfaced errors, anything where the
+brief says "use your judgment" — those stay on Sonnet regardless of quota
+state. Given granular, completely specified instructions it performs far
+above its price; given ambiguity it fails.
 
 **`sonnet` / `haiku` / `opus` — where Anthropic tiers still win.**
 `sonnet`: recon that requires judgment about what MATTERS (architecture
@@ -123,59 +137,76 @@ example where speed beats everything. `opus`: the escalation tier — subtle
 multi-file correctness, security-sensitive diffs, UI fidelity where GLM's
 attempt missed, arbitration-grade second opinions.
 
-## Spend doctrine — three currencies
+## Spend doctrine — the budget hierarchy
 
-Three budgets, not one: **prepaid Anthropic capacity** (Sonnet/Opus draw on
-session and weekly limits already paid for — unspent capacity is wasted
-capacity, and the marginal cost of using Sonnet to read files or build
-context is zero); **the Fable weekly allowance** (the genuinely scarce
-Anthropic resource, conserved for the lead/judgment seat); **marginal cash**
-(DeepSeek, GLM, and Kimi bill real dollars per token through the gateway).
+Four levels, not three, and they are not interchangeable:
 
-**Commodity work goes to prepaid capacity. Cash buys differentiation, never
-volume.** The test for every gateway dispatch: what does this route provide
-that a prepaid Sonnet does not? Valid answers: a different engineering
-lineage that produces different solutions and different failure modes
-(`ds-pro-max`); a frontend/UI ceiling above the prepaid tier (`glm`); 1M
-context or vision (`kimi`); uncorrelated blind spots in an adversarial
-panel; throughput when Anthropic rate limits are the binding constraint.
-Invalid answer: "it is cheaper" — cheaper than free is not a thing.
+1. **The Fable weekly allowance** — the premium resource. Lead and judgment
+   seat only. Never spent on execution.
+2. **Anthropic subscription capacity** (Opus, Sonnet, Haiku) — expendable.
+   Already paid for, wasted if unspent, zero marginal cost. The default pool
+   for anything needing judgment, taste, or creativity.
+3. **`ds-flash`** — the one cash-billed route worth paying for. It bills
+   real money but so little that it buys enormous throughput for pennies.
+   Its job: absorb fully-specifiable work so subscription capacity stays
+   free for what only Anthropic tiers can do. Hard limit: it supplies no
+   creativity and no taste. Given granular, completely specified
+   instructions it performs far above its price; given ambiguity it fails.
+4. **`glm`, `kimi`, `ds-pro`, `ds-pro-max`** — all bill real money at real
+   rates. Deliberate occasional spends, NOT defaults. Reach for them when
+   subscription capacity is exhausted, or when cross-family adversarial
+   diversity is genuinely the point of the task.
 
-**State-dependent clause.** When Anthropic session or weekly limits ARE
-under pressure, the old offload logic reactivates: gateway models absorb
-volume until pressure eases. This doctrine is conditional on quota state,
-not absolute — check quota state before assuming the default holds.
+**Specify it and send it to flash; judge it and keep it on Anthropic; pay
+the others only when they are genuinely the point.**
 
-Patterns that remain valid, re-anchored to the corrected economics:
+The second key idea: brief specificity is the lever that moves work onto
+the pennies route. Main-agent effort spent making a brief exact converts
+expensive execution into cheap execution without touching quality. The
+guardrail is absolute — where work genuinely needs creativity or taste,
+specifying harder is the WRONG move; route it to an Anthropic tier and keep
+the output quality. Invalid answer for reaching past `ds-flash` into
+DELIBERATE SPEND territory: "it is cheaper" — cheaper than free (subscription
+capacity) is not a thing, and cheaper-than-Anthropic-cash is not a reason to
+skip the pennies route either.
 
-1. **Draft-then-polish.** A lower tier writes the first draft (code, doc,
-   test suite); a higher tier reviews and patches the DELTA. Reviewing a
-   90%-right draft spends a fraction of the tokens that authoring from
-   scratch does — the reviewing model's output is a diff, not a file.
+Patterns that remain valid, re-anchored to the corrected hierarchy:
+
+1. **Draft-then-polish.** `ds-flash` drafts the first pass (code, doc, test
+   suite) from a fully-specified brief; an Anthropic tier reviews and
+   patches the DELTA. Reviewing a 90%-right draft spends a fraction of the
+   tokens that authoring from scratch does — the reviewing model's output is
+   a diff, not a file.
 2. **The distillation shield.** NOTHING bulky enters the main context raw.
-   Oversized reads, verbose logs, giant diffs route through Sonnet (prepaid,
-   the new default) with a report-shape mandate — `kimi` when the material
-   exceeds Sonnet-practical (giant logs, whole-repo digests). This converts
-   main-context input tokens — the most expensive tokens in the session —
-   into tokens already paid for.
-3. **Cross-family sampling for diversity.** Dispatch 2–3 parallel attempts
-   on a hard-ish task, each from a DIFFERENT model family, with
-   differently-angled briefs; a verifier (or the acceptance battery) picks
-   the survivor. The point is diversity of failure mode, not price — three
-   same-family attempts buy nothing a single attempt didn't already risk.
+   Oversized reads, verbose logs, giant diffs route through Sonnet
+   (subscription capacity, the default) with a report-shape mandate —
+   `kimi` (deliberate spend) when the material exceeds Sonnet-practical
+   (giant logs, whole-repo digests). This converts main-context input
+   tokens — the most expensive tokens in the session — into tokens already
+   paid for.
+3. **Speculative N-way sampling.** `ds-flash` is cheap enough that
+   dispatching several parallel attempts at one fully-specified task is now
+   routine, not a splurge — a verifier or the acceptance battery picks the
+   survivor. Reserve cross-family N-way sampling (2-3 attempts from
+   DIFFERENT model families, differently-angled briefs) for when diversity
+   of failure mode across training lineages is the actual point; that
+   variant is a deliberate cash spend, not the routine case.
 4. **Mixed-family verifier panels.** Refuters from a different family than
    the implementer, and from each other, catch what same-family review
-   rubber-stamps past. Cross-family disagreement is the high-signal event;
-   agreement ACROSS families is far stronger evidence than agreement within
-   one.
+   rubber-stamps past. Deliberate spend — justified when cross-family
+   disagreement is the actual signal sought; agreement ACROSS families is
+   far stronger evidence than agreement within one.
 5. **Battery-and-churn duty.** Test runs, lint sweeps, fixture regeneration,
-   rebase mechanics, changelog assembly: Sonnet by default (prepaid, no
-   deliberation needed); `ds-flash` only when Anthropic quota is under
-   pressure.
+   rebase mechanics, changelog assembly are fully-specifiable and
+   mechanically checkable — exactly the `ds-flash` profile, so `ds-flash` is
+   the default; fall back to Sonnet when the run needs judgment about what
+   changed or ambiguity resolution.
 6. **Brief-prep pre-digestion.** Sonnet assembles the RAW MATERIAL for
    briefs — candidate fix-point tables, current-state inventories — which
-   the main agent then curates and decides over; `ds-pro` only when quota is
-   under pressure. The lead spends judgment, not transcription.
+   the main agent then curates and decides over; this is judgment-adjacent
+   curation, so it stays on Sonnet by default. `ds-pro` is a deliberate spend
+   when subscription capacity is exhausted. The lead spends judgment, not
+   transcription.
 
 The quality floor is non-negotiable: offloading rides on verification, so a
 cheap implementation is only "done" when its acceptance battery and (for
@@ -186,12 +217,16 @@ it in the ledger.
 
 ## Cross-family verification pairings
 
-Same-family review shares training biases; route verifiers across families:
+Same-family review shares training biases, but a verifier is still a
+judgment seat: an Anthropic-tier verifier is the DEFAULT for judgment
+claims. Reach for a cash-billed cross-family verifier — DELIBERATE SPEND —
+only when independence from the implementer's training lineage is the
+actual point, not routinely:
 
 | Implementer | Preferred refuter |
 |---|---|
-| `glm` (frontend/UI) | `kimi` with screenshots |
-| `glm` (backend/feature) | `ds-pro-max` or `sonnet` |
-| `ds-pro-max` / `ds-flash` (backend) | `sonnet`, or `glm` for terminal-verifiable claims |
-| `opus` (critical) | `kimi` or `glm` second-read + main-agent spot-check |
-| `kimi` (analysis/synthesis) | `ds-pro` fact-check against sources, main agent arbitrates |
+| `glm` (frontend/UI) | `sonnet` by default; `kimi` with screenshots (deliberate spend) when independence from GLM's lineage on a UI-fidelity claim is the actual point |
+| `glm` (backend/feature) | `sonnet` by default; `ds-pro-max` (deliberate spend) when a different engineering lineage is the actual point |
+| `ds-pro-max` / `ds-flash` (backend) | `sonnet` by default |
+| `opus` (critical) | `sonnet` second-read + main-agent spot-check by default; `kimi` or `glm` (deliberate spend) when cross-family independence is the actual point |
+| `kimi` (analysis/synthesis) | `sonnet` fact-check against sources by default; `ds-pro` (deliberate spend) when independence from Sonnet's lineage is the actual point, main agent arbitrates |

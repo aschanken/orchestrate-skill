@@ -24,17 +24,19 @@ Two scarce resources, guarded separately:
    decomposition, decisions, briefs, arbitration. Everything mechanical
    (searching, reading at length, writing code, running batteries) happens in
    disposable subagent contexts.
-2. **Three separate budgets, not one.** (a) Prepaid Anthropic capacity —
-   Sonnet and Opus draw on session/weekly limits already paid for; unspent
-   capacity is wasted capacity, and the marginal cost of Sonnet reading
-   files or building context is zero. (b) The Fable weekly allowance — the
-   genuinely scarce Anthropic resource, conserved for the lead/judgment
-   seat. (c) Marginal cash — DeepSeek, GLM, and Kimi bill real dollars per
-   token through the gateway. **Commodity work goes to prepaid capacity.
-   Cash buys differentiation, never volume.** The test for every gateway
-   dispatch: what does this route provide that a prepaid Sonnet does not?
-   When Anthropic session/weekly limits ARE under pressure, gateway models
-   absorb volume instead — see the spend doctrine in `references/routing.md`.
+2. **A budget hierarchy, not one pool.** (a) The Fable weekly allowance is
+   the premium resource — conserved for the lead/judgment seat, never spent
+   on execution. (b) Anthropic subscription capacity (Opus, Sonnet, Haiku)
+   is expendable: already paid for, wasted if unspent, zero marginal cost.
+   It is the default pool for anything needing judgment, taste, or
+   creativity. (c) `ds-flash` bills cash, but so little that it buys
+   enormous throughput for pennies — worth paying for, and its job is to
+   absorb fully-specifiable work so subscription capacity stays free for
+   what only Anthropic tiers can do. (d) GLM, Kimi K3, `ds-pro`, and
+   `ds-pro-max` bill real money at real rates: deliberate occasional spends,
+   never defaults. **Specify it and send it to flash; judge it and keep it
+   on Anthropic; pay the others only when they are genuinely the point.**
+   See the spend doctrine in `references/routing.md`.
 
 The product of the main agent's spending is **leverage**: a brief good enough
 that a cheaper model executes at near-top-tier quality. Routing is not fixed
@@ -64,11 +66,12 @@ implementer-of-record for feature work.
 ## Routing
 
 Governing principle: route by how expensive a mistake is to **detect**, not
-just to make. If tests/linters will catch errors mechanically, route down —
-retries at DeepSeek prices cost less than first-passes at Opus prices. If
-errors only surface under judgment (subtle UI fidelity, concurrency,
-security, API design taste), route up or split so the judgment part stays in
-the brief.
+just to make. If tests and linters catch errors mechanically, a fully
+specified brief on `ds-flash` costs pennies, and its retries cost pennies
+again. If errors only surface under judgment (subtle UI fidelity,
+concurrency, security, API design taste), keep the work on Anthropic
+subscription capacity, or split it so the judgment stays in the brief and
+only the mechanical remainder goes to flash.
 
 Read `references/routing.md` at the first dispatch of the session — it holds
 the full model dossiers, the spend doctrine, and the mechanics (gateway
@@ -76,15 +79,15 @@ agent types, thinking control via `effort`). Quick table:
 
 | Route | Use for |
 |---|---|
-| session model | judgment only: plans, briefs, arbitration — never bulk work |
-| `opus` | correctness-critical or safety-adjacent implementation; subtle multi-file judgment |
-| `sonnet` | DEFAULT for recon, file reading, context building, distillation, single-concern fixes, verifier duty — prepaid, so it is the first choice for commodity work |
-| `haiku` | pure-mechanical template edits with a worked example |
-| `glm` — GLM 5.2 | frontend/UI implementation, long agentic runs, terminal-heavy work, repo-scale refactors |
-| `kimi` — Kimi K3 | large-context delegate (whole-repo digests, giant logs), vision/screenshot verification, research synthesis |
-| `ds-pro-max` — DeepSeek V4 Pro, max thinking | technical code authoring, algorithms, engineering critique and second opinions, log-driven debugging — the fresh-perspective seat |
-| `ds-pro` — DeepSeek V4 Pro, thinking off | RESERVE: fast bulk instruct work when Anthropic quota is under pressure |
-| `ds-flash` — DeepSeek V4 Flash, max thinking | RESERVE: high-volume mechanical work when Anthropic quota is under pressure |
+| session model (Fable) | judgment only: plans, briefs, arbitration — the premium seat, never bulk work |
+| `ds-flash` — DeepSeek V4 Flash, max thinking | DEFAULT for fully-specifiable work: mechanical edits, file surgery from an exact fix-point map, glue code, scripts, test scaffolding, fixtures, data munging, churn sweeps. Pennies per run, so it absorbs volume that would otherwise burn subscription capacity. Supplies no creativity — never send it work needing taste |
+| `sonnet` | DEFAULT for judgment-bearing work: recon, file reading, context building, distillation, single-concern fixes, verifier duty. Expendable subscription capacity, zero marginal cost |
+| `opus` | correctness-critical or safety-adjacent implementation; subtle multi-file judgment; anything where taste decides the outcome |
+| `haiku` | pure-mechanical template edits where writing a flash-grade brief costs more than the work itself |
+| `ds-pro-max` — DeepSeek V4 Pro, max thinking | DELIBERATE SPEND: cross-family engineering critique of a design before implementation; algorithms when subscription capacity is exhausted |
+| `glm` — GLM 5.2 | DELIBERATE SPEND: frontend/UI implementation and long agentic runs when subscription capacity is exhausted |
+| `kimi` — Kimi K3 | DELIBERATE SPEND: reads exceeding the session's own context; cross-family adversarial verification |
+| `ds-pro` — DeepSeek V4 Pro, thinking off | DELIBERATE SPEND: fast bulk instruct work when subscription capacity is exhausted |
 
 Claude tiers dispatch as `model:` on a generic agent type (e.g.
 `general-purpose`); gateway models dispatch as `subagent_type:` directly.
@@ -95,10 +98,11 @@ tiers only for the hardest verify/judge work.
 **Escalation ladder (on subagent failure):**
 1. Amend the brief naming exactly what went wrong; retry the SAME tier —
    prefer continuing the same agent where the harness supports it (warm
-   context, no re-brief cost).
-2. Second failure: up-tier the model — or switch model family at the same
-   tier; families have uncorrelated blind spots, and a family swap is often
-   free where an up-tier isn't.
+   context, no re-brief cost). A `ds-flash` failure almost always means the
+   brief left something unspecified: fix the brief, not the routing.
+2. Second failure: move UP into Anthropic subscription capacity — Sonnet,
+   then Opus. Do not move sideways into a cash-billed gateway model to save
+   face; that spends real money on a problem the brief caused.
 3. Top tier fails too: the brief is wrong, not the model. Re-recon,
    rediagnose. The main agent implementing directly is the LAST rung, never a
    shortcut, and gets flagged in the report when it happens.
@@ -163,9 +167,10 @@ of power:
 2. **Write the hard 10% yourself.** Signatures, invariants, the edge-case
    table, pseudocode for the one tricky algorithm — inline in the brief.
    Main-agent output spent here is the cheapest quality lever there is; it is
-   what converts an Opus task into a GLM or DeepSeek task.
-3. **One worked example beats ten rules** for repetitive work — it is what
-   converts a Sonnet task into a `ds-flash` or Haiku task.
+   what converts an Opus task into a `ds-flash` task.
+3. **One worked example beats ten rules** for repetitive work — the highest
+   return sentence in any brief, because it is what makes `ds-flash` safe on
+   work that would otherwise need Sonnet.
 4. **Pre-mortem the brief:** name the 2–3 most likely wrong turns for THIS
    task ("you will be tempted to X — don't, because Y").
 5. **Pointers, not content.** The subagent reads files itself for cheap —
@@ -176,6 +181,15 @@ of power:
 7. **Write to the comms standard.** A brief that names every referent exactly
    and marks its own confidence is the difference between a cheap model
    executing correctly and executing something adjacent.
+
+The levers compound toward one target: **the more completely a brief
+specifies the work, the further down the cost ladder it lands, and the bottom
+rung is `ds-flash` at pennies.** Main-agent effort spent making a brief exact
+is the highest-return spend in the session, because it converts expensive
+execution into cheap execution without touching quality. The limit is fixed:
+flash supplies no creativity and no taste. Where the work genuinely needs
+either, specifying harder is the wrong move — route it to an Anthropic tier
+and keep the output.
 
 Every brief also restates the repo's workflow rules (branch naming, commit/PR
 conventions, TDD, verification battery) and ends with the standing-orders +
@@ -201,7 +215,8 @@ The main agent arbitrates; it does not inspect by default.
   (tests with counts vs baseline, lint, CI status) is sufficient evidence.
 - **Tier 1 — judgment work:** an independent verifier agent (never the
   implementer), briefed to REFUTE the done-claim; screenshots for visual
-  work (route those to `kimi` — it reads images). Prefer a verifier from a
+  work (Anthropic tiers read images natively — route to `kimi` only when
+  cross-family independence is the point). Prefer a verifier from a
   DIFFERENT model family than the implementer: shared training biases make
   same-family review rubber-stamp-prone. The main agent reads the verdict,
   not the diff.
@@ -220,8 +235,8 @@ The main agent arbitrates; it does not inspect by default.
 - When a subagent's report contradicts prior beliefs (a doc, a memory, an
   earlier claim), surface the correction explicitly.
 - Final reports include a one-line routing ledger with the offload split
-  ("routed: 2×ds-pro recon, 1×glm impl, 1×kimi verify, 1×sonnet arbitration
-  — Anthropic tokens spent on judgment only") — cost visibility, counts the
+  ("routed: 2×sonnet recon, 3×ds-flash impl, 1×sonnet verify — no
+  cash-billed models needed") — cost visibility, counts the
   main agent actually performed.
 
 Named failure modes — self-check for these:
@@ -230,16 +245,17 @@ Named failure modes — self-check for these:
 - **Orchestrator drift:** the main agent "just quickly" editing implementation
   files as the session wears on. The drift is gradual — checkpoint whenever
   about to Edit anything that isn't a brief, doc, or merge mechanic.
-- **Cash-for-commodity:** spending gateway dollars on work a prepaid Sonnet
-  executes identically under the same brief — the cost is real and the
-  differentiation is zero. The inverse failure — routing judgment work down
-  to a cheap model to save tokens — is just as named: quality is never the
-  trade.
+- **Cash-for-commodity:** spending GLM, Kimi, or DeepSeek Pro dollars on work
+  a Sonnet or a well-briefed `ds-flash` executes identically — real cost,
+  zero differentiation. Two inverse failures are equally named: routing
+  judgment or taste work to `ds-flash` to save money, and leaving flash idle
+  while burning subscription capacity on work an exact fix-point map would
+  have made mechanical.
 - **Brief bloat:** pasting whole docs into briefs. Distill and point.
 - **Context flooding:** letting raw dumps, full diffs, or unshaped reports
   flow back into the main context. Reports have a required shape; hold agents
-  to it. Oversized-but-necessary reads get a `ds-pro` or `kimi` distillation
-  pass before anything reaches the main context.
+  to it. Oversized-but-necessary reads get a Sonnet distillation pass before
+  anything reaches the main context.
 - **Rubber-stamp review:** accepting "all tests pass" without counts vs
   baseline — and same-family verifier pairings on judgment work.
 - **Parallelism theater:** splitting inherently serial work to look thorough
