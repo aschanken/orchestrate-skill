@@ -2,8 +2,8 @@
 
 Turn your session's top model into the **brains of the operation**: it plans,
 routes, and verifies, while model-routed subagents and agent teams do all the
-implementation lifting — each in an isolated git worktree, each delivering a
-branch/PR with evidence. The skill is model-agnostic: the "brains" is
+implementation lifting — worktree-isolated for anything that commits, each
+delivering a branch/PR with evidence. The skill is model-agnostic: the "brains" is
 whatever model runs the session (Fable, Opus, …), and the execution pool
 spans Claude tiers **and** gateway-routed third-party models (DeepSeek V4
 Flash/Pro, GLM 5.2, Kimi K3).
@@ -34,10 +34,11 @@ not the task**. A brief that pre-makes every decision and pre-solves the hard
 10% (signatures, invariants, edge cases, the one tricky algorithm) moves the
 same task down a model tier — and with near-free gateway models in the pool,
 "down" now means DeepSeek prices. The skill's offload doctrine inverts the
-default: Anthropic session/weekly budget is reserved for judgment; everything
-retryable executes on the gateway pool, with quality held by verification
-(runnable acceptance criteria + cross-family refute-verification), not by
-paying for expensive first passes.
+default: Anthropic subscription capacity is the default pool for judgment;
+fully-specifiable, mechanically-checkable work executes on the gateway pool
+(`ds-flash` by default), with quality held by verification (runnable
+acceptance criteria + cross-family refute-verification), not by paying for
+expensive first passes.
 
 The skill guards the main context from **both** directions: no writing code
 (output tokens), and no reading at length either (input tokens) — recon comes
@@ -52,14 +53,15 @@ reports are held to a required shape with no raw diffs or file dumps.
   arbitration, team-lead duty, trivial one-liners where dispatching costs
   more than the fix, and knowledge-distillation writing where the main
   conversation context is the source material.
-- **A routing table across model families** — routed by how expensive
-  mistakes are to *detect*: GLM 5.2 as the default implementation workhorse
-  (frontend standout), Kimi K3 as the large-context/vision/synthesis
-  specialist, DeepSeek V4 Pro at max thinking as the budget engineer, Pro
-  with thinking off as the instruct executor and distiller, Flash at max
-  thinking as the near-free utility workhorse — with Opus/Sonnet/Haiku kept
-  for the judgment-critical slots. Full dossiers, the offload doctrine, and
-  cross-family verifier pairings live in `orchestrate/references/routing.md`.
+- **A routing table across model families** — Sonnet as the default for
+  judgment-bearing work (recon, distillation, single-concern fixes,
+  verification), `ds-flash` at max thinking as the default for
+  fully-specifiable work (near-free utility workhorse), with GLM 5.2
+  (frontend ceiling), Kimi K3 (large-context/vision/synthesis), and
+  DeepSeek V4 Pro (thinking on or off, budget engineering) as DELIBERATE
+  SPEND when subscription capacity is exhausted or cross-family independence
+  is the point. Full dossiers, the offload doctrine, and cross-family
+  verifier pairings live in `orchestrate/references/routing.md`.
 - **Agent-team awareness** — teams are a routed *collaboration pattern*:
   fan-out subagents for result-only work, a team when interaction adds value
   (competing-hypothesis debugging, adversarial review panels, cross-layer
@@ -76,13 +78,14 @@ reports are held to a required shape with no raw diffs or file dumps.
   pre-mortem; pointers not pasted content; acceptance criteria as runnable
   commands with baselines.
 - **Routed verification** — mechanical claims verified by verbatim command
-  output (cheap DeepSeek refuter panels where a second opinion helps);
-  judgment work verified by an independent agent from a *different model
-  family* briefed to refute the done-claim — screenshots go to Kimi, which
-  reads images; the main agent only arbitrates disagreements and spot-checks
-  the single riskiest claim per work-package.
+  output alone, sufficient on its own; judgment work verified by an
+  independent agent from a *different model family* briefed to refute the
+  done-claim — Anthropic tiers read screenshots natively, route to Kimi only
+  when cross-family independence is the point; the main agent only
+  arbitrates disagreements and spot-checks the single riskiest claim per
+  work-package.
 - **Named anti-patterns** — ceremony dispatch, orchestrator drift,
-  premium-by-default routing (and its inverse: routing judgment work down to
+  cash-for-commodity routing (and its inverse: routing judgment work down to
   save tokens), brief bloat, context flooding, rubber-stamp review,
   parallelism theater, team-for-the-sake-of-it.
 - **A communication standard between agents** — adapts ASD-STE100 Simplified

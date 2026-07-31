@@ -32,9 +32,9 @@ can tolerate gaps that would sink a gateway model).
 <Signatures, invariants, edge-case table, pseudocode for the tricky
 algorithm — whatever judgment the executing model shouldn't have to supply.>
 
-## Worked example
-<For repetitive/mechanical work: one input→output case done fully.
-This section is what makes Haiku routing safe.>
+## Worked example (for mechanical work)
+<One input→output case done fully. This is what makes `ds-flash` routing safe:
+it converts a rule the agent must interpret into a pattern it can match.>
 
 ## Scope fences
 - Files owned by sibling agents (do not touch): <paths>
@@ -44,10 +44,6 @@ This section is what makes Haiku routing safe.>
   git only (status, log, diff); no add, commit, branch, or checkout" — a bare
   "no git commands" fence contradicts any acceptance criterion that asks the
   agent to run `git status`, and a careful agent will stop to report it.>
-
-## Worked example (for mechanical work)
-<One input→output case done fully. This is what makes `ds-flash` routing safe:
-it converts a rule the agent must interpret into a pattern it can match.>
 
 ## Self-contradiction check (author's pass before dispatch)
 <Re-read the brief as the agent will: do any two instructions conflict? The

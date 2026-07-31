@@ -1,6 +1,6 @@
 ---
 name: kimi
-description: Orchestrate routing target — Kimi K3. Large-context delegate (1M ctx) and vision-capable specialist: whole-repo digests, giant-log analysis, cross-cutting audits, screenshot-in-the-loop UI verification, long-horizon campaigns, research synthesis. Prefer as analyst/verifier over bulk implementer.
+description: Orchestrate routing target — Kimi K3. DELIBERATE SPEND: large-context delegate (1M ctx) and vision-capable specialist — whole-repo digests, giant-log analysis, cross-cutting audits, screenshot-in-the-loop UI verification, long-horizon campaigns, research synthesis. Prefer as analyst/verifier over bulk implementer.
 model: anthropic.kimi-k3
 ---
 
