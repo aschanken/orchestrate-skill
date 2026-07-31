@@ -114,6 +114,21 @@ class VagueReferentExceptionTests(unittest.TestCase):
         self.assertEqual(comms.lint_text(text)["counts"]["vague_referent"], 1)
 
 
+class BareItVagueReferentTests(unittest.TestCase):
+    """comms.md:71 names "it" explicitly: Never "the file", "it", "as
+    mentioned above". A bare "it" is a vague referent; "it" inside another
+    word is not."""
+
+    def test_vague_referent_catches_bare_it(self):
+        self.assertEqual(comms.lint_text("It is stale.")["counts"]["vague_referent"], 1)
+
+    def test_vague_referent_ignores_it_inside_words(self):
+        for word in ("its", "item", "omit", "edit", "itself"):
+            self.assertEqual(
+                comms.lint_text(f"The {word} value stays.")["counts"]["vague_referent"], 0
+            )
+
+
 class CodeExclusionTests(unittest.TestCase):
     def test_fenced_code_excluded_from_scoring(self):
         text = ("The parser is fast.\n"

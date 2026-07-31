@@ -93,6 +93,7 @@ VAGUE_REFERENTS = [
     "the file", "this file", "that file", "the function", "this function",
     "the script", "the above", "as mentioned", "as noted above",
     "the aforementioned", "the former", "the latter", "earlier in this",
+    "it",
 ]
 
 VAGUE_QUANTIFIERS = [
