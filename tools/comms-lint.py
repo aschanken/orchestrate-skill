@@ -93,6 +93,7 @@ VAGUE_REFERENTS = [
     "the file", "this file", "that file", "the function", "this function",
     "the script", "the above", "as mentioned", "as noted above",
     "the aforementioned", "the former", "the latter", "earlier in this",
+    "it",
 ]
 
 VAGUE_QUANTIFIERS = [
@@ -205,6 +206,10 @@ REFERENT_RE = re.compile(
     r"|\b[\w.-]+\.\w{1,6}:\d+\b"
     r"|`[^`]*`"
     r"|(?<!\S)/\S+"
+    # Bare filename with an extension (config.py, README.md, SKILL.md).
+    # Stem and extension both need 2+ chars with letters, so decimals
+    # ("3.14") and abbreviations ("e.g.", "Dr.") do not qualify.
+    r"|\b[\w.-]{2,}[A-Za-z][\w.-]*\.[A-Za-z]{2,}\b"
 )
 
 VAGUE_QUANTIFIER_RE = re.compile(
@@ -299,8 +304,11 @@ def lint_text(text, mode="message"):
             _record(locations, counts, stripped, start + a, "phrasal_verb", ph)
         for ph, (a, _b) in phrase_matches(sent, MARKETING_ADJECTIVES):
             _record(locations, counts, stripped, start + a, "marketing_adjective", ph)
-        for ph, (a, _b) in phrase_matches(sent, HEDGE_OPENERS):
-            _record(locations, counts, stripped, start + a, "hedge_opener", ph)
+        for ph in HEDGE_OPENERS:
+            # Hedge openers only count at the start of a sentence; mid-sentence
+            # "i think" is a hedge, not an opener.
+            if re.match(r"(?i)" + re.escape(ph) + r"(?![a-z])", sent):
+                _record(locations, counts, stripped, start, "hedge_opener", ph)
         for ph, (a, _b) in phrase_matches(sent, BANNED_WORDS):
             _record(locations, counts, stripped, start + a, "banned_word", ph)
         # The rule-8 exception: a resolvable referent in the SAME sentence
@@ -362,14 +370,26 @@ def main(argv=None, stdin=None):
     if args.files:
         chunks = []
         for path in args.files:
-            with open(path, encoding="utf-8") as fh:
-                chunks.append(fh.read())
+            try:
+                with open(path, encoding="utf-8") as fh:
+                    chunks.append(fh.read())
+            except OSError as exc:
+                print(f"comms-lint: cannot read {path}: {exc}", file=sys.stderr)
+                return 1
         text = "\n".join(chunks)
     else:
+        chunks = []
         stream = stdin if stdin is not None else sys.stdin
         text = stream.read()
 
     result = lint_text(text, args.mode)
+    if args.show and len(chunks) > 1:
+        # Multi-file --show must report per-file line numbers. The aggregate
+        # score still comes from the joined text above; only the location
+        # lines switch to per-file offsets.
+        result["locations"] = [
+            loc for chunk in chunks for loc in lint_text(chunk, args.mode)["locations"]
+        ]
     if args.json:
         print(json.dumps({k: v for k, v in result.items() if k != "locations"}))
     else:

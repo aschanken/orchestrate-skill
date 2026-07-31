@@ -13,7 +13,7 @@ import os
 import re
 import tempfile
 import unittest
-from contextlib import redirect_stdout
+from contextlib import redirect_stderr, redirect_stdout
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 MODULE_PATH = os.path.join(HERE, "comms-lint.py")
@@ -112,6 +112,54 @@ class VagueReferentExceptionTests(unittest.TestCase):
     def test_exception_is_per_sentence(self):
         text = "The file is stale. See src/main.py:42 for the fix."
         self.assertEqual(comms.lint_text(text)["counts"]["vague_referent"], 1)
+
+
+class HedgeOpenerAnchoringTests(unittest.TestCase):
+    """hedge_opener must fire only when the phrase opens a sentence."""
+
+    def test_hedge_opener_ignored_mid_sentence(self):
+        self.assertEqual(
+            comms.lint_text("The output, i think, looks fine to me today.")["counts"]["hedge_opener"],
+            0,
+        )
+
+    def test_hedge_opener_fires_at_sentence_start(self):
+        self.assertEqual(
+            comms.lint_text("I think this is wrong.")["counts"]["hedge_opener"], 1
+        )
+
+
+class BareFilenameReferentTests(unittest.TestCase):
+    """A bare filename with an extension is a resolvable referent, so it
+    suppresses vague_referent in the same sentence (comms.md rule 5)."""
+
+    def test_bare_filename_with_extension_suppresses(self):
+        for text in ("The file config.py is stale.",
+                     "The file README.md is stale.",
+                     "The file SKILL.md is stale."):
+            self.assertEqual(
+                comms.lint_text(text)["counts"]["vague_referent"], 0, text
+            )
+
+    def test_vague_referent_without_filename_still_fires(self):
+        self.assertEqual(
+            comms.lint_text("The file is stale.")["counts"]["vague_referent"], 1
+        )
+
+
+class BareItVagueReferentTests(unittest.TestCase):
+    """comms.md:71 names "it" explicitly: Never "the file", "it", "as
+    mentioned above". A bare "it" is a vague referent; "it" inside another
+    word is not."""
+
+    def test_vague_referent_catches_bare_it(self):
+        self.assertEqual(comms.lint_text("It is stale.")["counts"]["vague_referent"], 1)
+
+    def test_vague_referent_ignores_it_inside_words(self):
+        for word in ("its", "item", "omit", "edit", "itself"):
+            self.assertEqual(
+                comms.lint_text(f"The {word} value stays.")["counts"]["vague_referent"], 0
+            )
 
 
 class CodeExclusionTests(unittest.TestCase):
@@ -213,6 +261,28 @@ class SentenceSplittingTests(unittest.TestCase):
         self.assertEqual(len(comms.split_sentences("Wait for it... then go.")), 1)
 
 
+class MissingFileTests(unittest.TestCase):
+    """An unreadable input path must not crash with a raw traceback."""
+
+    def test_missing_file_reports_one_line_on_stderr_and_exits_nonzero(self):
+        buf = io.StringIO()
+        with redirect_stderr(buf):
+            code = comms.main(["/nonexistent/path/foo.txt"], stdin=io.StringIO(""))
+        self.assertNotEqual(code, 0)
+        lines = buf.getvalue().strip().splitlines()
+        self.assertEqual(len(lines), 1, buf.getvalue())
+        self.assertIn("/nonexistent/path/foo.txt", lines[0])
+
+    def test_readable_file_still_lints_cleanly(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = os.path.join(d, "ok.txt")
+            with open(p, "w") as fh:
+                fh.write("The parser reads src/main.py:42.\n")
+            code, out = run_cli([p])
+            self.assertEqual(code, 0)
+            self.assertIn("score: 0.00", out)
+
+
 class FileInputTests(unittest.TestCase):
     def test_multiple_files_are_concatenated(self):
         with tempfile.TemporaryDirectory() as d:
@@ -226,6 +296,42 @@ class FileInputTests(unittest.TestCase):
             data = json.loads(out)
             self.assertEqual(data["words"], 5)
             self.assertEqual(code, 0)
+
+
+class MultiFileShowTests(unittest.TestCase):
+    """--show with multiple files must print per-file line numbers, while
+    the aggregate score keeps matching the concatenated input."""
+
+    A_CONTENT = "One good line.\nSecond line here.\n"
+    B_CONTENT = "I think this is wrong.\n"
+
+    def _write(self, d):
+        p1 = os.path.join(d, "a.txt")
+        p2 = os.path.join(d, "b.txt")
+        with open(p1, "w") as fh:
+            fh.write(self.A_CONTENT)
+        with open(p2, "w") as fh:
+            fh.write(self.B_CONTENT)
+        return p1, p2
+
+    def test_show_reports_per_file_line_numbers(self):
+        with tempfile.TemporaryDirectory() as d:
+            p1, p2 = self._write(d)
+            _, out = run_cli([p1, p2, "--show"])
+            vlines = [l for l in out.splitlines() if re.match(r"^\d+:", l)]
+            self.assertEqual(len(vlines), 1, vlines)
+            self.assertTrue(any(l.startswith("1:hedge_opener:") for l in vlines),
+                            "expected b.txt line 1, got: %r" % vlines)
+
+    def test_multi_file_score_matches_concatenated_input(self):
+        with tempfile.TemporaryDirectory() as d:
+            p1, p2 = self._write(d)
+            _, out = run_cli([p1, p2, "--json"])
+            data = json.loads(out)
+            expected = comms.lint_text("\n".join([self.A_CONTENT, self.B_CONTENT]))
+            self.assertEqual(data["score"], expected["score"])
+            self.assertEqual(data["total"], expected["total"])
+            self.assertEqual(data["words"], expected["words"])
 
 
 class ShowFlagTests(unittest.TestCase):
