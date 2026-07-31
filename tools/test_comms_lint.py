@@ -114,6 +114,21 @@ class VagueReferentExceptionTests(unittest.TestCase):
         self.assertEqual(comms.lint_text(text)["counts"]["vague_referent"], 1)
 
 
+class HedgeOpenerAnchoringTests(unittest.TestCase):
+    """hedge_opener must fire only when the phrase opens a sentence."""
+
+    def test_hedge_opener_ignored_mid_sentence(self):
+        self.assertEqual(
+            comms.lint_text("The output, i think, looks fine to me today.")["counts"]["hedge_opener"],
+            0,
+        )
+
+    def test_hedge_opener_fires_at_sentence_start(self):
+        self.assertEqual(
+            comms.lint_text("I think this is wrong.")["counts"]["hedge_opener"], 1
+        )
+
+
 class BareFilenameReferentTests(unittest.TestCase):
     """A bare filename with an extension is a resolvable referent, so it
     suppresses vague_referent in the same sentence (comms.md rule 5)."""

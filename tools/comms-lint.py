@@ -304,8 +304,11 @@ def lint_text(text, mode="message"):
             _record(locations, counts, stripped, start + a, "phrasal_verb", ph)
         for ph, (a, _b) in phrase_matches(sent, MARKETING_ADJECTIVES):
             _record(locations, counts, stripped, start + a, "marketing_adjective", ph)
-        for ph, (a, _b) in phrase_matches(sent, HEDGE_OPENERS):
-            _record(locations, counts, stripped, start + a, "hedge_opener", ph)
+        for ph in HEDGE_OPENERS:
+            # Hedge openers only count at the start of a sentence; mid-sentence
+            # "i think" is a hedge, not an opener.
+            if re.match(r"(?i)" + re.escape(ph) + r"(?![a-z])", sent):
+                _record(locations, counts, stripped, start, "hedge_opener", ph)
         for ph, (a, _b) in phrase_matches(sent, BANNED_WORDS):
             _record(locations, counts, stripped, start + a, "banned_word", ph)
         # The rule-8 exception: a resolvable referent in the SAME sentence
