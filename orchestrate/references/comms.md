@@ -156,8 +156,12 @@ module-scoped-cache pattern.
 ## Enforcement
 
 A companion tool, `tools/comms-lint.py`, scores agent messages against the
-mechanical subset of these rules (violations per 100 words). It is being built
-in parallel and will be integrated into the orchestrate dispatch pipeline.
+mechanical subset of these rules (violations per 100 words), across seven
+rule-backed categories, each mapped one-to-one to a numbered rule above:
+long_sentence, passive_voice, nominalization, phrasal_verb,
+marketing_adjective, hedge_opener, vague_referent. Covered by a 59-test
+suite. It is not yet wired into the orchestrate dispatch pipeline as an
+automated gate — run it by hand against a message or brief before sending.
 
 ## Limits
 
