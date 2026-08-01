@@ -130,6 +130,13 @@ reports are held to a required shape with no raw diffs or file dumps.
   communication standard and its pasteable comms block.
 - `tools/comms-lint.py` — mechanical compliance scoring for the comms
   standard.
+- `swarm/` — an optional tmux launcher for a three-window workflow whose
+  third window runs a lead agent under this skill: `start_workflow.sh`
+  builds the session (set `REMOTE_USER`/`REMOTE_HOST` for the ssh window),
+  and `swarm_instructions.txt` is the lead's standing orders — vehicle
+  selection via the skill's strategy gate, tmux confinement, team lifecycle
+  when a team is chosen, and measured harness facts about spawned-agent
+  report delivery.
 - `agents/` — subagent definitions that pin the gateway routes (`ds-flash`,
   `ds-flash-lite`, `ds-pro`, `ds-pro-max`, `glm`, `kimi`). Installed
   separately (see below);
