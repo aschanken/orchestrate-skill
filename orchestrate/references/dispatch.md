@@ -146,10 +146,11 @@ loops.
   block and the comms block from YOUR brief into EVERY grunt prompt.
 - Per-grunt report shape: <shape>, hard cap <N> lines.
 - Concurrency: at most <N> grunts in flight.
-- Iteration ceiling: <N> dispatch rounds. On hitting it, stop and report
+- Iteration ceiling: <N> dispatch rounds. At the ceiling, stop and report
   progress plus the remainder — never push past the ceiling.
-- Escalation: a decision fork, a contradicted fix-point, or a grunt failing
-  after one amended retry → stop the campaign and report. Never re-scope.
+- Escalation: if you hit a decision fork or a contradicted fix-point, stop
+  the campaign and report. If a grunt fails after one amended retry, stop
+  the campaign and report. Never re-scope.
 - Your deliverable: ONE report in the shape below, hard cap <N> lines.
   Never forward grunt reports raw; distill and attribute (grunt id +
   claim + its evidence).
