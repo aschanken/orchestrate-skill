@@ -33,11 +33,15 @@ The core claim the skill is built around: **routing is fixed by the brief,
 not the task**. A brief that pre-makes every decision and pre-solves the hard
 10% (signatures, invariants, edge cases, the one tricky algorithm) moves the
 same task down a model tier — and with near-free gateway models in the pool,
-"down" now means DeepSeek prices. The skill's offload doctrine inverts the
-default: Anthropic subscription capacity is the default pool for judgment;
-fully-specifiable, mechanically-checkable work executes on the gateway pool
-(`ds-flash` by default), with quality held by verification (runnable
-acceptance criteria + cross-family refute-verification), not by paying for
+"down" now means DeepSeek prices. Since DeepSeek V4 Flash 0731
+(Sonnet-class benchmarks at 1/35th the price), the offload doctrine routes
+by checkability: everything whose output the lead or a battery can check —
+specified execution AND judgment-adjacent duty (recon, distillation,
+refute-verification, campaign mid-orchestration) — executes on the pennies
+pool (`ds-flash` / `ds-flash-lite`); finite Anthropic subscription headroom
+is conserved for taste, creativity, vision, and safety-adjacent judgment.
+Quality is held by verification (runnable acceptance criteria +
+cross-family refute-verification, itself near-free now), not by paying for
 expensive first passes.
 
 The skill guards the main context from **both** directions: no writing code
@@ -48,20 +52,33 @@ reports are held to a required shape with no raw diffs or file dumps.
 
 ## What the mode enforces
 
+- **A strategy gate before any dispatch** — every task is analyzed
+  (deliverable, decomposability, checkability, interaction value, volume)
+  and gets an explicit dispatch strategy choosing among direct handling, a
+  single routed subagent, a linear pipeline, parallel fan-out, a delegated
+  campaign, a Workflow script, an agent team, or a hybrid. No vehicle is a
+  reflex — teams included.
 - **Division of labor** — the main agent never implements features directly.
   Its hands-on exceptions: brief writing (including the hard 10%), evidence
   arbitration, team-lead duty, trivial one-liners where dispatching costs
   more than the fix, and knowledge-distillation writing where the main
   conversation context is the source material.
-- **A routing table across model families** — Sonnet as the default for
-  judgment-bearing work (recon, distillation, single-concern fixes,
-  verification), `ds-flash` at max thinking as the default for
-  fully-specifiable work (near-free utility workhorse), with GLM 5.2
-  (frontend ceiling), Kimi K3 (large-context/vision/synthesis), and
-  DeepSeek V4 Pro (thinking on or off, budget engineering) as DELIBERATE
-  SPEND when subscription capacity is exhausted or cross-family independence
-  is the point. Full dossiers, the offload doctrine, and cross-family
-  verifier pairings live in `orchestrate/references/routing.md`.
+- **A routing table across model families** — `ds-flash` (V4 Flash 0731,
+  max thinking) as the default for all checkable work and `ds-flash-lite`
+  (thinking off) as the grunt tier, both at pennies; Sonnet/Opus/Haiku as
+  conserved weekly headroom for taste, vision, safety judgment, and
+  escalation; GLM 5.2 (frontend ceiling), Kimi K3
+  (large-context/vision/synthesis), and DeepSeek V4 Pro (parameter-depth
+  knowledge) as DELIBERATE SPEND when their specific capability is the
+  point. Benchmark anchors, full dossiers, the offload doctrine, and
+  cross-family verifier pairings live in
+  `orchestrate/references/routing.md`.
+- **A delegated-campaign pattern** — for high-volume boundable programs, a
+  `ds-flash` mid-orchestrator dispatches grunt subagents (nesting is
+  supported three layers deep; campaigns use one by rule), iterates
+  against acceptance criteria, and returns one distilled deliverable —
+  protecting the main context and the subscription at once. The campaign
+  delegation protocol lives in `orchestrate/references/dispatch.md`.
 - **Agent-team awareness** — teams are a routed *collaboration pattern*:
   fan-out subagents for result-only work, a team when interaction adds value
   (competing-hypothesis debugging, adversarial review panels, cross-layer
@@ -114,7 +131,8 @@ reports are held to a required shape with no raw diffs or file dumps.
 - `tools/comms-lint.py` — mechanical compliance scoring for the comms
   standard.
 - `agents/` — subagent definitions that pin the gateway routes (`ds-flash`,
-  `ds-pro`, `ds-pro-max`, `glm`, `kimi`). Installed separately (see below);
+  `ds-flash-lite`, `ds-pro`, `ds-pro-max`, `glm`, `kimi`). Installed
+  separately (see below);
   the Agent tool's `model` param only accepts Claude aliases, so third-party
   routing happens through these agent types.
 

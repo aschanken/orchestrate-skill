@@ -1,6 +1,6 @@
 ---
 name: orchestrate
-description: Run this session in "brains of the operation" mode — the main agent plans, routes, and verifies; model-routed subagents and agent teams do all implementation lifting. Invoke with a task (/orchestrate fix issues 22 and 24) or bare to arm the mode for the whole session.
+description: Run this session in "brains of the operation" mode — the main agent analyzes each task, architects a dispatch strategy (linear, fan-out, delegated campaign, team, workflow, or hybrid — never a fixed reflex), then routes and verifies while model-routed subagents do all implementation lifting. Invoke with a task (/orchestrate fix issues 22 and 24) or bare to arm the mode for the whole session.
 ---
 
 # Orchestrate — the main agent steers, subagents build
@@ -26,17 +26,20 @@ Two scarce resources, guarded separately:
    disposable subagent contexts.
 2. **A budget hierarchy, not one pool.** (a) The Fable weekly allowance is
    the premium resource — conserved for the lead/judgment seat, never spent
-   on execution. (b) Anthropic subscription capacity (Opus, Sonnet, Haiku)
-   is expendable: already paid for, wasted if unspent, zero marginal cost.
-   It is the default pool for anything needing judgment, taste, or
-   creativity. (c) `ds-flash` bills cash, but so little that it buys
-   enormous throughput for pennies — worth paying for, and its job is to
-   absorb fully-specifiable work so subscription capacity stays free for
-   what only Anthropic tiers can do. (d) GLM, Kimi K3, `ds-pro`, and
-   `ds-pro-max` bill real money at real rates: deliberate occasional spends,
-   never defaults. **Specify it and send it to flash; judge it and keep it
-   on Anthropic; pay the others only when they are genuinely the point.**
-   See the spend doctrine in `references/routing.md`.
+   on execution. (b) The pennies pool — `ds-flash` and `ds-flash-lite`
+   (DeepSeek V4 Flash 0731, Sonnet-class on benchmarks at 1/35th the
+   price) — is the volume default: it absorbs ALL checkable work,
+   specified execution and judgment-adjacent duty alike, so the
+   subscription survives the week. (c) Anthropic subscription capacity
+   (Opus, Sonnet, Haiku) is finite weekly headroom, the conserved
+   resource: reserved for taste, creativity, vision, safety-adjacent
+   correctness, and arbitration — what the pennies pool structurally
+   cannot hold. (d) GLM, Kimi K3, `ds-pro`, and `ds-pro-max` bill real
+   money at real rates: deliberate occasional spends, never defaults.
+   **If its output is checkable, send it to flash; if it needs taste,
+   vision, or safety judgment, spend headroom on Anthropic; pay the others
+   only when they are genuinely the point.** See the spend doctrine in
+   `references/routing.md`.
 
 The product of the main agent's spending is **leverage**: a brief good enough
 that a cheaper model executes at near-top-tier quality. Routing is not fixed
@@ -80,14 +83,15 @@ agent types, thinking control via `effort`). Quick table:
 | Route | Use for |
 |---|---|
 | session model (Fable) | judgment only: plans, briefs, arbitration — the premium seat, never bulk work |
-| `ds-flash` — DeepSeek V4 Flash, max thinking | DEFAULT for fully-specifiable work: mechanical edits, file surgery from an exact fix-point map, glue code, scripts, test scaffolding, fixtures, data munging, churn sweeps. Pennies per run, so it absorbs volume that would otherwise burn subscription capacity. Supplies no creativity — never send it work needing taste |
-| `sonnet` | DEFAULT for judgment-bearing work: recon, file reading, context building, distillation, single-concern fixes, verifier duty. Expendable subscription capacity, zero marginal cost |
-| `opus` | correctness-critical or safety-adjacent implementation; subtle multi-file judgment; anything where taste decides the outcome |
-| `haiku` | pure-mechanical template edits where writing a flash-grade brief costs more than the work itself |
-| `ds-pro-max` — DeepSeek V4 Pro, max thinking | DELIBERATE SPEND: cross-family engineering critique of a design before implementation; algorithms when subscription capacity is exhausted |
-| `glm` — GLM 5.2 | DELIBERATE SPEND: frontend/UI implementation and long agentic runs when subscription capacity is exhausted |
-| `kimi` — Kimi K3 | DELIBERATE SPEND: reads exceeding the session's own context; cross-family adversarial verification |
-| `ds-pro` — DeepSeek V4 Pro, thinking off | DELIBERATE SPEND: fast bulk instruct work when subscription capacity is exhausted |
+| `ds-flash` — DeepSeek V4 Flash 0731, max thinking | DEFAULT for checkable work of BOTH kinds: fully-specified execution (mechanical edits, file surgery from a fix-point map, glue code, scaffolding, churn) AND judgment-adjacent duty whose output the lead or a battery can check (recon, distillation shield, refute-verification, first drafts, campaign mid-orchestration). Sonnet-class benchmarks at pennies; text-only, verbose — cap its reports. Taste, creativity, and safety judgment stay off it |
+| `ds-flash-lite` — same model, thinking off | grunt tier: template edits with a worked example, format conversions, fixtures, report collection, high-volume sweeps — no deliberation latency |
+| `sonnet` | taste-bearing judgment: ambiguity resolution, UX/API-surface taste, creative and user-facing writing, vision-in-the-loop checks, arbitration support; first escalation when flash fails. Finite weekly headroom — do not burn it on work flash does identically |
+| `opus` | correctness-critical or safety-adjacent implementation; subtle multi-file judgment; arbitration-grade second opinions |
+| `haiku` | speed-critical mechanical sweeps (fast where flash is slow); grunt duty that conserves cash instead of headroom |
+| `glm` — GLM 5.2 | DELIBERATE SPEND: frontend/UI ceiling, repo-scale refactors, long agentic runs |
+| `kimi` — Kimi K3 | DELIBERATE SPEND: reads exceeding the session's own context; vision + synthesis verdicts; cross-family panel seats |
+| `ds-pro-max` — DeepSeek V4 Pro, max thinking | DELIBERATE SPEND: knowledge-heavy technical work where parameter depth beats Flash's benchmarks; intra-family second opinions |
+| `ds-pro` — DeepSeek V4 Pro, thinking off | DELIBERATE SPEND: legacy instruct fallback when `ds-flash-lite` disappoints on a task class |
 
 Claude tiers dispatch as `model:` on a generic agent type (e.g.
 `general-purpose`); gateway models dispatch as `subagent_type:` directly.
@@ -99,7 +103,10 @@ tiers only for the hardest verify/judge work.
 1. Amend the brief naming exactly what went wrong; retry the SAME tier —
    prefer continuing the same agent where the harness supports it (warm
    context, no re-brief cost). A `ds-flash` failure almost always means the
-   brief left something unspecified: fix the brief, not the routing.
+   brief left something unspecified: fix the brief, not the routing. One
+   in-pool exception: a `ds-flash-lite` failure that looks like missing
+   reasoning (not missing specification) goes straight up to `ds-flash` —
+   same pennies, thinking on.
 2. Second failure: move UP a tier, or into a different model family —
    Sonnet, then Opus, or a cash-billed gateway model. A different-family
    move on repeat failure is legitimate, not a face-saving spend.
@@ -107,15 +114,53 @@ tiers only for the hardest verify/judge work.
    rediagnose. The main agent implementing directly is the LAST rung, never a
    shortcut, and gets flagged in the report when it happens.
 
+## The strategy gate — analyze first, then architect
+
+Every substantive task — the `/orchestrate <task>` arguments, and each new
+task while the mode is armed — passes through an explicit strategy step
+BEFORE any dispatch. No vehicle is a reflex: not teams, not fan-out, not
+solo handling. The gate has two moves:
+
+1. **Analyze the prompt.** What is the deliverable? How decomposable is
+   the work, and are the parts independent or coupled? Are errors
+   mechanically checkable or judgment-surfaced? Does any part need taste,
+   vision, or safety judgment? What volume of reading/writing is involved,
+   and how much of it must never touch the main context? Would workers
+   gain from talking to each other, or only report results?
+2. **Write the dispatch strategy** — a short block, posted before acting,
+   naming: the chosen architecture (from the menu below, or a hybrid),
+   the route per seat, the verification plan, and what stays with the
+   lead. One paragraph or a small table; ceremony is a failure mode, so a
+   trivial task gets one line ("direct — dispatch overhead exceeds the
+   work").
+
+Architecture menu — pick by the analysis, combine freely:
+
+| Architecture | Choose when |
+|---|---|
+| Direct handling | trivial Q&A or a fix smaller than the brief it would need |
+| Single routed subagent | one self-contained deliverable, one seat |
+| Linear pipeline | stages feed each other (recon → implement → verify); parallelism would be theater |
+| Parallel fan-out | independent result-only units — disjoint files, separate concerns |
+| Delegated campaign | high-volume boundable program: a `ds-flash` mid-orchestrator drives grunt agents, returns one distilled deliverable (see Delegated campaigns) |
+| Workflow script | the loop/fan-out structure is fully known upfront — deterministic orchestration beats a model doing it |
+| Agent team | interaction IS the value: competing hypotheses, debating review panels, peer-negotiated interfaces (see Agent teams) |
+| Hybrid | most real campaigns: e.g. fan-out recon → team for the contested design → campaign for the sweep → flash refuters |
+
+The strategy is revisable — a surprise mid-execution (scope growth, failed
+route, contradicted premise) reopens the gate, and the revision is stated,
+not silent.
+
 ## The standard flow
 
 1. **Recon** (parallel, routed): map the relevant code, return a distilled
    brief — findings, exact file:line evidence, open questions. Recon routes
-   to Sonnet by default (prepaid) — mechanical recon (file maps, symbol
-   traces, log digests) and judgment recon (architecture assessment, "why
-   is this shaped this way") alike. Use Explore agents for broad searches.
-   Never let an implementer explore from scratch what a recon pass can map
-   first.
+   to `ds-flash` by default since 0731 — mechanical recon (file maps,
+   symbol traces, log digests) and checkable judgment recon alike; Sonnet
+   when the recon question is itself a taste call ("is this design sound"),
+   `kimi` (deliberate spend) when the read exceeds flash-practical bulk.
+   Use Explore agents for broad searches. Never let an implementer explore
+   from scratch what a recon pass can map first.
 2. **Plan** (main agent): turn briefs into a plan — every decision made
    ("implement exactly this, don't relitigate"), verified fix-point tables,
    acceptance criteria as runnable commands, scope fences. Read
@@ -127,11 +172,15 @@ tiers only for the hardest verify/judge work.
      talk. One branch/PR per concern. Parallel agents get **disjoint file
      ownership** spelled out both ways; dry-run `git merge-tree` between
      sibling branches before reporting them compatible.
+   - **Delegated campaign**: high-volume boundable programs — a `ds-flash`
+     mid-orchestrator drives grunts and returns one distilled deliverable.
+     See Delegated campaigns below.
    - **Agent team**: when the value comes from interaction between workers —
      see Agent teams below. Read `references/teams.md` before first spawn.
    - **Workflow tool** where available, for N-item sweeps or verify panels
      (pipeline + schema outputs) — invoking this skill is the standing
-     opt-in, within session size guidance.
+     opt-in, within session size guidance. Prefer it over a campaign when
+     the loop structure needs no adaptation between rounds.
 4. **Verify** (routed, then arbitrated — see Verification).
 
 ## Agent teams — route the collaboration pattern too
@@ -155,6 +204,39 @@ teammate models are pinned via the routing agent types (a definition's
 `model` is honored; its `effort` is not — teammates follow the lead's
 effort); disjoint file ownership per teammate; plan approval required for
 implementation teammates.
+
+## Delegated campaigns — a mid-orchestrator on the pennies pool
+
+Confirmed harness fact (probed 2026-08-01): gateway subagents hold the
+Agent tool — a dispatched `ds-flash` agent can itself dispatch grunt
+subagents and relay their results. That enables a third dispatch shape
+between fan-out and teams:
+
+- **When:** high-volume, boundable work-programs whose per-item work is
+  grunt-shaped and whose loop needs SOME adaptation between rounds —
+  research sweeps over many sources, N-file audits, corpus collection,
+  iterate-until-battery-green churn. Two disqualifiers: a loop whose
+  structure is fully known upfront belongs to a Workflow script
+  (deterministic beats model-managed), and items needing taste belong on
+  Anthropic tiers, not in a campaign at all.
+- **Shape:** the lead writes ONE campaign brief; a `ds-flash`
+  mid-orchestrator runs the dispatch loop — grunts on `ds-flash-lite`
+  (conserves headroom) or `haiku` (conserves cash, faster wall-clock) —
+  iterates against the acceptance criteria, and returns ONE distilled
+  deliverable. The main context receives a single report instead of N;
+  the subscription receives almost nothing; flash's near-free cache reads
+  make the manager's long loop cost cents.
+- **The campaign brief** carries everything a normal brief does PLUS the
+  delegation protocol from `references/dispatch.md` (campaign appendix):
+  the grunt-brief template with the standing-orders and comms blocks to
+  paste into every grunt, grunt routing per item class, per-grunt report
+  shape with a hard cap, batch size, an iteration ceiling, and the
+  escalation rule (stop-and-report, never re-scope).
+- **Limits:** the mid-orchestrator makes no taste decisions — an
+  unresolved fork stops the campaign; delegation depth is ONE (grunts do
+  not spawn agents); and the campaign's deliverable is a judgment claim —
+  verify it like one (Tier 1: independent refuter on the result, spot-check
+  one grunt's raw output against what the manager reported about it).
 
 ## Distillation — what makes a brief carry top-tier quality
 
@@ -218,8 +300,10 @@ The main agent arbitrates; it does not inspect by default.
   work (Anthropic tiers read images natively — route to `kimi` only when
   cross-family independence is the point). Prefer a verifier from a
   DIFFERENT model family than the implementer: shared training biases make
-  same-family review rubber-stamp-prone. The main agent reads the verdict,
-  not the diff.
+  same-family review rubber-stamp-prone — and since Flash 0731, a
+  cross-family refuter costs pennies, so text-checkable claims get one by
+  default (pairings table in `references/routing.md`). The main agent
+  reads the verdict, not the diff.
 - **Tier 2 — main agent:** arbitrate implementer/verifier disagreements with
   targeted reads, and personally spot-check the single riskiest claim per
   work-package. This is the legitimate case for the main agent reading code.
@@ -235,9 +319,9 @@ The main agent arbitrates; it does not inspect by default.
 - When a subagent's report contradicts prior beliefs (a doc, a memory, an
   earlier claim), surface the correction explicitly.
 - Final reports include a one-line routing ledger with the offload split
-  ("routed: 2×sonnet recon, 3×ds-flash impl, 1×sonnet verify — no
-  cash-billed models needed") — cost visibility, counts the
-  main agent actually performed.
+  ("routed: 2×ds-flash recon, 3×ds-flash impl, 1×ds-flash refute,
+  1×sonnet taste-check — subscription headroom spent: 1 seat") — cost
+  visibility, counts the main agent actually performed.
 
 Named failure modes — self-check for these:
 - **Ceremony dispatch:** an agent to read one file you already know. The point
@@ -246,11 +330,12 @@ Named failure modes — self-check for these:
   files as the session wears on. The drift is gradual — checkpoint whenever
   about to Edit anything that isn't a brief, doc, or merge mechanic.
 - **Cash-for-commodity:** spending GLM, Kimi, or DeepSeek Pro dollars on work
-  a Sonnet or a well-briefed `ds-flash` executes identically — real cost,
-  zero differentiation. Two inverse failures are equally named: routing
-  judgment or taste work to `ds-flash` to save money, and leaving flash idle
-  while burning subscription capacity on work an exact fix-point map would
-  have made mechanical.
+  a well-briefed `ds-flash` executes identically — real cost, zero
+  differentiation. Two inverse failures are equally named: routing taste,
+  vision, or safety work to the pennies pool to save headroom, and
+  **headroom-for-commodity** — burning finite subscription capacity on
+  recon, distillation, verification, or execution that flash performs
+  identically for pennies.
 - **Brief bloat:** pasting whole docs into briefs. Distill and point.
 - **Context flooding:** letting raw dumps, full diffs, or unshaped reports
   flow back into the main context. Reports have a required shape; hold agents

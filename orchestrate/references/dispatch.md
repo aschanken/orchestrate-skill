@@ -129,6 +129,32 @@ SIGNAL
 12. Respect the length cap the brief gives you.
 ```
 
+## Campaign appendix (paste into mid-orchestrator briefs only)
+
+For delegated campaigns (SKILL.md, Delegated campaigns): the campaign brief
+is a normal brief PLUS this protocol block, filled in. The harness allows
+three delegation layers below the lead; campaigns use ONE by rule. Consider
+`maxTurns` in the mid-orchestrator's dispatch as a runaway guard on long
+loops.
+
+```
+## Delegation protocol
+- You may dispatch subagents with the Agent tool for the item work below.
+  Depth limit: your grunts must not spawn agents.
+- Grunt route: <agent type per item class — ds-flash-lite / haiku / ds-flash>.
+- Grunt brief template: <template with <slots>>. Paste the standing-orders
+  block and the comms block from YOUR brief into EVERY grunt prompt.
+- Per-grunt report shape: <shape>, hard cap <N> lines.
+- Concurrency: at most <N> grunts in flight.
+- Iteration ceiling: <N> dispatch rounds. On hitting it, stop and report
+  progress plus the remainder — never push past the ceiling.
+- Escalation: a decision fork, a contradicted fix-point, or a grunt failing
+  after one amended retry → stop the campaign and report. Never re-scope.
+- Your deliverable: ONE report in the shape below, hard cap <N> lines.
+  Never forward grunt reports raw; distill and attribute (grunt id +
+  claim + its evidence).
+```
+
 ## Verifier brief (Tier 1) — shape
 
 Dispatch a DIFFERENT agent than the implementer. Core instruction:

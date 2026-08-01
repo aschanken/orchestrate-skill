@@ -1,6 +1,6 @@
 ---
 name: ds-pro
-description: Orchestrate routing target — DeepSeek V4 Pro with thinking disabled. DELIBERATE SPEND instruct executor, dispatched when subscription capacity is exhausted (recon and distillation default to Sonnet): doc drafts from outlines, format conversions, high-volume single-concern sweeps, first drafts for a higher tier to polish.
+description: Orchestrate routing target — DeepSeek V4 Pro with thinking disabled. DELIBERATE SPEND legacy instruct seat — ds-flash-lite covers this duty band at a third of the price; dispatch ds-pro only when flash-lite's instruct quality disappoints on a task class (bigger active parameters, steadier instruction-following).
 model: anthropic.deepseek-v4-pro
 effort: low
 ---

@@ -73,11 +73,13 @@ Spawn mechanics:
 - Disjoint file ownership spelled out in EVERY spawn prompt, both ways.
 
 Routing inside a team follows `routing.md`, subject to the composition
-constraint below: the economical default is Anthropic-majority with at
-most one cross-family seat; `glm`, `kimi`, and `ds-pro-max` seats are
-added only when the cash-billed spend is justified per that constraint.
-A mixed-family panel is a feature for review teams — uncorrelated blind
-spots argue better.
+constraint below: the economical default is Anthropic-majority, plus
+`ds-flash` bounded seats at pennies wherever an extra uncorrelated
+arguing voice helps (see "ds-flash team seats" below); `glm`, `kimi`,
+and `ds-pro-max` seats are added only when their real-rate spend is
+justified per that constraint. A mixed-family panel is a feature for
+review teams — uncorrelated blind spots argue better, and since 0731
+the second family costs approximately nothing.
 
 ## Cross-model team composition
 
@@ -132,16 +134,29 @@ seats, the cheaper Anthropic-majority variant is noted alongside it.
 Mixed-family teams bill real cash per cash-billed teammate, so they are for
 contested judgment, not for routine parallel work.
 
-### Why ds-flash is a poor teammate
+### ds-flash team seats — bounded roles only
 
-A teammate operates with autonomy: it claims tasks from a shared list,
-negotiates with peers, and decides when its own work is done. `ds-flash`
-requires its work fully specified before it starts and supplies no judgment
-about scope — the opposite profile. Put it in a team seat and it either
-stalls on ambiguous task claims or claims tasks it cannot actually complete
-without a judgment call. `ds-flash` is an excellent fan-out subagent under
-an exact brief, and a poor teammate wherever self-direction is the
-requirement. Rule: give `ds-flash` dispatched briefs, not team seats.
+The old rule was "never a team seat". Flash 0731 (Index 50) earns a
+revision, not a repeal. A teammate operates with autonomy — claims tasks,
+negotiates, decides when its work is done — and autonomy under ambiguity
+is still where flash is weakest relative to Anthropic tiers, while its
+benchmark strength is exactly the checkable-reasoning band. So:
+
+- **Eligible (bounded seats):** refuter/verifier seat on a review panel,
+  hypothesis-holder in competing-hypothesis debugging, fact-checker in a
+  research team — seats whose task list the lead fully enumerates upfront
+  and whose output is argued against peers, which IS the check. At pennies,
+  a flash panel seat adds an uncorrelated lineage for approximately
+  nothing — take it liberally.
+- **Not eligible:** implementation seats and any seat that must
+  self-direct scope, own ambiguous tasks, or exercise taste. Those stay
+  on Anthropic tiers or `glm`.
+
+Two mechanics still bite: a teammate follows the LEAD's effort (the
+max-thinking pin in the `ds-flash` definition does not apply), and
+teammates cannot dispatch subagents — so campaign mid-orchestration is a
+SUBAGENT role, never a team seat. Note flash's verbosity in the spawn
+prompt: hard message caps, or the panel drowns.
 
 ## Task list discipline
 

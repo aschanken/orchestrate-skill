@@ -1,6 +1,6 @@
 ---
 name: ds-pro-max
-description: Orchestrate routing target — DeepSeek V4 Pro at max thinking. DELIBERATE SPEND: highly technical, engineering-minded budget engineer for algorithms, backend implementation with design content, invariant-preserving refactors, log/stack-trace debugging, perf work against measurements, technical verification of backend done-claims.
+description: Orchestrate routing target — DeepSeek V4 Pro at max thinking. DELIBERATE SPEND: knowledge-heavy technical work where 49B-active parameter depth beats Flash 0731's benchmarks (unfamiliar protocols, obscure APIs, domain-dense debugging), and intra-DeepSeek second opinions on flash attempts that look subtly off. Flash 0731 outbenchmarks it at a third of the price — when in doubt, flash first.
 model: anthropic.deepseek-v4-pro
 effort: max
 ---
