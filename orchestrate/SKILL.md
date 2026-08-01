@@ -339,8 +339,9 @@ Named failure modes — self-check for these:
 - **Brief bloat:** pasting whole docs into briefs. Distill and point.
 - **Context flooding:** letting raw dumps, full diffs, or unshaped reports
   flow back into the main context. Reports have a required shape; hold agents
-  to it. Oversized-but-necessary reads get a Sonnet distillation pass before
-  anything reaches the main context.
+  to it. Oversized-but-necessary reads get a distillation pass — `ds-flash` by
+  default, Sonnet when the cut itself needs taste — before anything
+  reaches the main context.
 - **Rubber-stamp review:** accepting "all tests pass" without counts vs
   baseline — and same-family verifier pairings on judgment work.
 - **Parallelism theater:** splitting inherently serial work to look thorough

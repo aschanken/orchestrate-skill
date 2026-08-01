@@ -1,6 +1,6 @@
 ---
 name: glm
-description: Orchestrate routing target — GLM 5.2. DELIBERATE SPEND: Opus-slot substitute at its ceiling, not a default implementer (Sonnet is default) — frontend/UI builds, multi-file feature implementation, terminal-heavy work, repo-scale refactors, long agentic runs. 1M context.
+description: Orchestrate routing target — GLM 5.2. DELIBERATE SPEND: Opus-slot substitute at its ceiling, not a default implementer (ds-flash for checkable work and Sonnet for taste hold the defaults) — frontend/UI builds, multi-file feature implementation, terminal-heavy work, repo-scale refactors, long agentic runs. 1M context.
 model: anthropic.glm-5.2
 ---
 
