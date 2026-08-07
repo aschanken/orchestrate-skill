@@ -231,69 +231,6 @@ loops.
   claim + its evidence).
 ```
 
-## Comms block (paste verbatim)
-
-```
-## Comms standard (governs every message you send)
-
-Write for a machine reader that will act on your words with no chance to ask
-you what you meant.
-
-PRECISION
-1. One name for one thing. Reuse the exact identifier the brief uses. Never
-   introduce a synonym for something already named.
-2. Name the actor. Write "the parser reads the file", not "the file is read".
-3. One instruction per sentence, 20 words maximum. Put the condition first,
-   then the command.
-4. Use plain verbs. Write "analyze the log", not "perform an analysis of the
-   log". No phrasal verbs: spin up, circle back, dive into, reach out.
-5. Make every referent resolvable: a path, a file:line, a symbol, a command, a
-   task id, or an agent name. Never "the file", "it", "as mentioned above".
-
-EVIDENCE
-6. Attach an origin to every claim: verbatim command output, a file:line, or
-   the word "inferred".
-7. Mark confidence with CONFIRMED, UNCERTAIN, or REFUTED. Never round
-   UNCERTAIN up to CONFIRMED.
-8. Report unknowns as unknowns. A hidden gap costs the reader more than a
-   stated one.
-
-SIGNAL
-9. Lead with the conclusion. Your reader may stop after the first line.
-10. Delete marketing adjectives (seamless, robust, powerful, elegant,
-    best-in-class) and hedge openers ("it is important to note", "it is worth
-    noting"). They carry no information.
-11. Never restate the brief back. Report only what you found and what changed.
-12. Respect the length cap the brief gives you.
-```
-
-## Campaign appendix (paste into mid-orchestrator briefs only)
-
-For delegated campaigns (SKILL.md, Delegated campaigns): the campaign brief
-is a normal brief PLUS this protocol block, filled in. The harness allows
-three delegation layers below the lead; campaigns use ONE by rule. Consider
-`maxTurns` in the mid-orchestrator's dispatch as a runaway guard on long
-loops.
-
-```
-## Delegation protocol
-- You may dispatch subagents with the Agent tool for the item work below.
-  Depth limit: your grunts must not spawn agents.
-- Grunt route: <agent type per item class — ds-flash-lite / haiku / ds-flash>.
-- Grunt brief template: <template with <slots>>. Paste the standing-orders
-  block and the comms block from YOUR brief into EVERY grunt prompt.
-- Per-grunt report shape: <shape>, hard cap <N> lines.
-- Concurrency: at most <N> grunts in flight.
-- Iteration ceiling: <N> dispatch rounds. At the ceiling, stop and report
-  progress plus the remainder — never push past the ceiling.
-- Escalation: if you hit a decision fork or a contradicted fix-point, stop
-  the campaign and report. If a grunt fails after one amended retry, stop
-  the campaign and report. Never re-scope.
-- Your deliverable: ONE report in the shape below, hard cap <N> lines.
-  Never forward grunt reports raw; distill and attribute (grunt id +
-  claim + its evidence).
-```
-
 ## Verifier brief (Tier 1) — shape
 
 Dispatch a DIFFERENT agent than the implementer. Core instruction:

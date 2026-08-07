@@ -178,7 +178,7 @@ back to Claude tiers and says so.
 ## Requirements
 
 - Claude Code with the Agent tool available (subagent dispatch).
-- Python 3 on PATH for `tools/codemap.py` (stdlib only; the skill degrades
+- Python 3 on PATH for `orchestrate/tools/codemap.py` (stdlib only; the skill degrades
   gracefully without it — recon just loses the free deterministic scaffold).
 - A git repo if you want worktree-isolated implementers (recommended).
 - Works best when the session model is a higher tier than the subagent models

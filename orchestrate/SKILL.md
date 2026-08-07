@@ -300,7 +300,8 @@ and task-list entries. The comms block is baked into the gateway agent
 definitions so routed agents comply by default, and pasted into briefs as
 reinforcement — a deliberate two-layer design. Read
 `references/comms.md` for the standard and its pasteable block;
-`tools/comms-lint.py` scores compliance mechanically.
+`tools/comms-lint.py` scores the mechanical subset of the rules — several
+stay judgment calls no linter settles.
 
 ## Decision Requests
 
