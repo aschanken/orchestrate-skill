@@ -1,9 +1,10 @@
 # orchestrate — a Claude Code skill
 
 Turn your top-tier Claude model into the **brains of the operation**: it plans,
-routes, and verifies, while cheaper model-routed subagents (Opus / Sonnet /
-Haiku) do all the implementation lifting — each in an isolated git worktree,
-each delivering a branch/PR with evidence.
+routes, and verifies, while cheaper model-routed subagents do all the
+implementation lifting — checkable work on a pennies-priced gateway default,
+taste-bearing work on Anthropic tiers — each in an isolated git worktree, each
+delivering a branch/PR with evidence.
 
 One command replaces the paragraph of instructions you'd otherwise repeat every
 session:
@@ -31,7 +32,8 @@ the task**. A brief that pre-makes every decision and pre-solves the hard 10%
 (signatures, invariants, edge cases, the one tricky algorithm) moves the same
 task down a model tier. The main agent's token spend concentrates in exactly
 that — recon synthesis, plan authorship, brief writing, evidence arbitration —
-while multi-hundred-tool-call implementation runs happen on Opus or Sonnet.
+while multi-hundred-tool-call implementation runs happen on routed subagent
+seats, at pennies when the brief is complete.
 
 The skill guards the main context from **both** directions: no writing code
 (output tokens), and no reading at length either (input tokens) — recon comes
@@ -47,10 +49,17 @@ subagent reports are held to a required shape with no raw diffs or file dumps.
   the source material.
 - **Routing by error-detection cost** — if tests catch mistakes mechanically,
   route down; if mistakes only surface under judgment, route up or keep the
-  judgment in the brief. Haiku for menial sweeps (with a worked example),
-  Sonnet for recon / single-concern fixes / verifier duty, Opus for multi-file
-  implementation, an optional large-context delegate for reads that fit
-  nowhere else.
+  judgment in the brief. A pennies-priced gateway model (`ds-flash` in the
+  reference setup) is the default for checkable work — recon, context
+  packets, fully-specified implementation, refute-verification; Anthropic
+  tiers hold taste, vision, and safety-adjacent correctness; cash-billed
+  specialists (GLM, Kimi, DeepSeek Pro) are deliberate spends, never
+  defaults. Dossiers and the spend doctrine live in
+  `orchestrate/references/routing.md`.
+- **A strategy gate before any dispatch** — every substantive task gets an
+  explicit architecture choice (direct, single seat, pipeline, fan-out,
+  delegated campaign, workflow script, agent team, or hybrid), posted before
+  acting; no vehicle is a reflex.
 - **An escalation ladder for failures** — amend the brief and retry the same
   tier (warm context) → up-tier the model → rediagnose the brief itself.
   Double failures usually mean the brief was wrong, not the model. The main
@@ -116,13 +125,17 @@ Claude Code picks it up automatically; type `/orchestrate` to invoke.
 - A git repo if you want worktree-isolated implementers (recommended).
 - Works best when the session model is a higher tier than the subagent models —
   that asymmetry is the entire point.
+- Optional: gateway-routed agent types for third-party models (the reference
+  setup defines `ds-flash`, `ds-flash-lite`, `glm`, `kimi`, `ds-pro`,
+  `ds-pro-max`); without them the routing table degrades gracefully to
+  Anthropic-only tiers.
 - Optional: the Workflow tool for N-item sweeps and adversarial verify panels
   (the skill treats its own invocation as the opt-in), and a large-context
   delegate agent for oversized reads.
 
 ## Customizing
 
-`orchestrate/SKILL.md` and `orchestrate/references/dispatch.md` are plain
+`orchestrate/SKILL.md` and the `orchestrate/references/` docs are plain
 markdown — edit the routing table, the flow, the brief skeleton, or the
 standing-orders block to match your team's conventions (e.g. squash vs merge
 commits, your CI battery, a reviewer bot workflow). The skill deliberately
