@@ -55,10 +55,11 @@ subagent reports are held to a required shape with no raw diffs or file dumps.
   tier (warm context) → up-tier the model → rediagnose the brief itself.
   Double failures usually mean the brief was wrong, not the model. The main
   agent implementing directly is the last rung, flagged when used.
-- **A four-step flow** — cheap parallel recon (file:line briefs) → a plan with
-  decisions already made → worktree-isolated dispatch with disjoint file
-  ownership and `git merge-tree` dry-runs between sibling branches → routed
-  verification.
+- **A four-step flow** — cheap parallel recon (a decision brief for the lead
+  plus a token-priced **context packet** handed to implementers by path,
+  scaffolded by a deterministic code-map tool) → a plan with decisions
+  already made → worktree-isolated dispatch with disjoint file ownership and
+  `git merge-tree` dry-runs between sibling branches → routed verification.
 - **Distillation levers for briefs** — decisions not questions; the hard 10%
   written by the main agent; one worked example over ten rules; a per-task
   pre-mortem ("you will be tempted to X — don't"); pointers not pasted
@@ -77,8 +78,17 @@ subagent reports are held to a required shape with no raw diffs or file dumps.
   on purpose: a skill about token conservation shouldn't be fat.
 - `orchestrate/references/dispatch.md` — read once per session at first
   dispatch: the brief skeleton, a verbatim standing-orders + report-shape
-  block to paste into every dispatch prompt, and the refute-oriented verifier
-  brief.
+  block to paste into every dispatch prompt, the context-packet shape recon
+  delivers to implementers, and the refute-oriented verifier brief.
+- `orchestrate/references/routing.md` — model dossiers, the spend doctrine,
+  and dispatch mechanics for model-routed seats.
+- `orchestrate/references/comms.md` — the agent-to-agent comms standard and
+  its pasteable block.
+- `orchestrate/references/teams.md` — agent-team doctrine for when
+  interaction between workers is the point.
+- `orchestrate/tools/codemap.py` — deterministic signature maps and
+  token-priced file trees (stdlib Python, no dependencies); the model-free
+  scaffold recon starts from. Ported from RepoPrompt's CodeMaps idea.
 
 ## Install
 
@@ -101,6 +111,8 @@ Claude Code picks it up automatically; type `/orchestrate` to invoke.
 ## Requirements
 
 - Claude Code with the Agent tool available (subagent dispatch).
+- Python 3 on PATH for `tools/codemap.py` (stdlib only; the skill degrades
+  gracefully without it — recon just loses the free deterministic scaffold).
 - A git repo if you want worktree-isolated implementers (recommended).
 - Works best when the session model is a higher tier than the subagent models —
   that asymmetry is the entire point.

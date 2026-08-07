@@ -136,6 +136,8 @@ boundary is **checkability, not judgment**. Flash now holds two duty bands:
    data munging, bulk semi-mechanical edits, churn — under the full brief
    discipline (fix-point map, worked example, runnable acceptance criteria).
 2. *Checkable judgment duty (new):* recon with judgment about what matters,
+   context-packet assembly for implementers (start from `tools/codemap.py`
+   output — deterministic signatures beat model paraphrase),
    distillation-shield passes, refute-verification of done-claims,
    first-draft authoring for a higher tier to polish, and mid-orchestration
    of campaigns (see SKILL.md, Delegated campaigns) — any judgment work
@@ -230,7 +232,9 @@ Patterns that remain valid, re-anchored to the corrected hierarchy:
    needs taste about what matters, `kimi` when vision or a
    synthesis-grade verdict is the deliverable. This converts
    main-context input tokens — the most expensive tokens in the
-   session — into pennies.
+   session — into pennies. Structure is even cheaper than pennies:
+   `tools/codemap.py` extracts signature maps and per-file token prices
+   deterministically — run it before any model reads bodies.
 3. **Speculative N-way sampling.** `ds-flash` is cheap enough that
    dispatching several parallel attempts at one fully-specified task is now
    routine, not a splurge — a verifier or the acceptance battery picks the

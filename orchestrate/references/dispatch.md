@@ -147,6 +147,62 @@ SIGNAL
 12. Respect the length cap the brief gives you.
 ```
 
+## Context packet — the recon deliverable that never transits the lead
+
+Ported from RepoPrompt's context-builder discipline (tiered render modes,
+token-priced composition; verified against repoprompt-ce source,
+2026-08-07). Recon produces TWO artifacts, not one:
+
+1. **Decision brief** — into the lead's context, standard report shape:
+   conclusions, file:line evidence, open questions, and the packet's path
+   plus its price line.
+2. **Context packet** — a file at an exact scratchpad path, handed to
+   implementers BY PATH. The lead never reads it. It moves recon's bulk
+   directly into implementer contexts.
+
+Packet shape — XML-tagged sections in this fixed order, each tag carrying
+its own token estimate:
+
+```
+<file_map tokens="~2.1k">
+  indented tree of the relevant area with per-file "~N tok" prices
+  (tools/codemap.py --tree emits exactly this)
+</file_map>
+<code_maps tokens="~4.8k">
+  signature-level maps (tools/codemap.py output) for the RING: files an
+  implementer must know the shape of but not read — callers, interfaces,
+  siblings of the target
+</code_maps>
+<file_contents tokens="~11k">
+  TARGET files only — full text, or slices annotated
+  "File: path (lines 40-95: the handler being changed)"
+</file_contents>
+<git_diff tokens="~1.2k">
+  unified diff, only when "what changed recently" is itself context
+</git_diff>
+<open_questions>
+  unresolved recon questions an implementer must NOT silently answer —
+  these become Decision Requests if hit
+</open_questions>
+```
+
+**Tiering rule (the packet's whole economics):** TARGET files — the ones
+the brief's fix-point map names — get contents; the RING gets code maps
+only; everything else stays in the file map. Promotion between tiers is
+the lead's call, priced by the token column.
+
+**Budgets and honesty:** default packet cap ~30k tokens; the decision
+brief states the per-section split. Token estimates use the codemap
+heuristic (bytes/4 × 1.05). An unknown count is written "pending" —
+NEVER 0 and never a guess; an invented count corrupts the lead's budget
+arithmetic.
+
+**Consumption:** the implementer brief's Context section points at the
+packet path — "Read <path> first; its <file_contents> section replaces
+your own exploration of the target files." The brief's fix-point map
+cites the same file:line the packet shows, so the two artifacts
+cross-check each other.
+
 ## Campaign appendix (paste into mid-orchestrator briefs only)
 
 For delegated campaigns (SKILL.md, Delegated campaigns): the campaign brief

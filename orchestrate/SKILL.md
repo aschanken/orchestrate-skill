@@ -153,9 +153,19 @@ not silent.
 
 ## The standard flow
 
-1. **Recon** (parallel, routed): map the relevant code, return a distilled
-   brief — findings, exact file:line evidence, open questions. Recon routes
-   to `ds-flash` by default since 0731 — mechanical recon (file maps,
+1. **Recon** (parallel, routed): contextualize before dispatching —
+   translate the raw ask into codebase nouns (paths, symbols, subsystem
+   names) with 1-2 cheap searches or a `tools/codemap.py --tree` pass, and
+   keep each recon prompt NARROW: cheap models overthink broad
+   instructions. Deterministic before model: `tools/codemap.py` emits
+   signature maps and token-priced file trees for free — recon agents
+   start from that scaffold instead of paraphrasing structure. Recon
+   returns TWO artifacts: a decision brief into the lead's context
+   (findings, exact file:line evidence, open questions, report-shape cap)
+   and a **context packet** written to a file and handed to implementers
+   by path — it never transits the lead (shape in
+   `references/dispatch.md`, "Context packet"). Recon routes to
+   `ds-flash` by default since 0731 — mechanical recon (file maps,
    symbol traces, log digests) and checkable judgment recon alike; Sonnet
    when the recon question is itself a taste call ("is this design sound"),
    `kimi` (deliberate spend) when the read exceeds flash-practical bulk.
@@ -258,7 +268,9 @@ of power:
    task ("you will be tempted to X — don't, because Y").
 5. **Pointers, not content.** The subagent reads files itself for cheap —
    give paths and fix-points, not pasted file bodies. Inline ONLY what the
-   agent cannot derive: decisions, invariants, the hard 10%.
+   agent cannot derive: decisions, invariants, the hard 10%. The recon
+   context packet is this lever institutionalized: the brief points at the
+   packet path instead of carrying context in its own body.
 6. **Acceptance criteria as commands** the agent runs and pastes verbatim,
    with baseline numbers to compare against (test counts, lint state).
 7. **Write to the comms standard.** A brief that names every referent exactly
@@ -354,7 +366,9 @@ Named failure modes — self-check for these:
   flow back into the main context. Reports have a required shape; hold agents
   to it. Oversized-but-necessary reads get a distillation pass — `ds-flash` by
   default, Sonnet when the cut itself needs taste — before anything
-  reaches the main context.
+  reaches the main context. A context packet transiting the lead is
+  flooding too: packets move recon → implementer by path; the lead reads
+  the decision brief and the price line, nothing more.
 - **Rubber-stamp review:** accepting "all tests pass" without counts vs
   baseline — and same-family verifier pairings on judgment work.
 - **Parallelism theater:** splitting inherently serial work to look thorough
